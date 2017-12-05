@@ -9,3 +9,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(readr)
+data = read_csv("Speed Dating Data.csv")
+```
+
+##EDA
+```{r}
+summary(data)
+```
+
+```{r}
+library(dplyr)
+data = data %>% 
+  mutate(gender = as.factor(gender),
+         condtn = as.factor(condtn),
+         wave = as.factor(wave),
+         position = as.factor(position),
+         )
+```
+
