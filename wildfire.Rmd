@@ -6,15 +6,21 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-
 library(data.table)
 library(RSQLite)
 library(dbplyr)
 library(dplyr)
 library(purrr)
 library(ggplot2)
+```
 
-conn <- dbConnect(SQLite(), 'Desktop/FPA_FOD_20170508.sqlite')
+```{r}
+download.file(url = "https://storage.googleapis.com/kaggle-datasets/2478/4139/FPA_FOD_20170508.sqlite.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1513189819&Signature=myp%2BB6XkMNUOfxgOsXoJbjzfSigsiX1Ds9wa8datVuulb7qk8hr5vaDh6S%2Fim9%2FygU7V%2Fpgk%2Fw%2FiPNduZsS7%2F6BUu7Lv3TSfIhPib%2B%2F0y4iCpoiii2dc1T%2B%2F2e4qY0E74yaPRgVKDQcjj1CL%2F0gF55JLr0QdkwoY5qnSt09w%2B%2B%2Bg8ZVn5jvPslhvxZDUcDlDVZdB0O%2BSdrZyu%2Flh8prBw2v2TZAzhylhok0WfbqU4MGLnGqLDa89Nf%2Fhtk%2Ba3KzadSLm04Eiv7jIh2%2FTpaYfqLPjelAHcj1KQrqjs1EK9DjLHuIPpXz2Y%2BnHM3ZLnM2iGnTRMnp5LtHd%2BQNs9GscrA%3D%3D", destfile = "data.zip")
+
+unzip("data.zip")
+file.remove("data.zip")
+
+conn <- dbConnect(SQLite(), "FPA_FOD_20170508.sqlite")
 
 # pull the fires table into RAM
 fires <- tbl(conn, "Fires") %>% collect()
