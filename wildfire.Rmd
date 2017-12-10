@@ -33,8 +33,10 @@ fires$CONT_DATEymd <- as.Date(fires$CONT_DATE - 2458014.5, origin = '2017-09-18'
 
 fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2017-09-18')
 
-firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd) %>% 
+firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE) %>% 
   na.omit() %>% data.frame()
+
+save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
 
 load("~/STA523/Project-peppa_pig/fireplot.RData")
 
@@ -56,8 +58,9 @@ allday <- rbind(newdataframe[,-4], firesplot[-notoneday,-4])
 
 allday <- allday %>% arrange(DISCOVERY_DATEymd) 
 
-year1992 <- allday[substr(allday$DISCOVERY_DATEymd,1,4) == '1992',]
+save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
 
+year1992 <- allday[substr(allday$DISCOVERY_DATEymd,1,4) == '1992',]
 
 library(ggmap)
 library(animation)
