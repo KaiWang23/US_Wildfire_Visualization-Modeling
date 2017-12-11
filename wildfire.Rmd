@@ -220,13 +220,26 @@ shinyApp(
 
 
 ```{r Shiny}
+library(shiny)
+library(leaflet)
+library(RColorBrewer)
+library(scales)
+library(lattice)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
 #REFERENCE: https://shiny.rstudio.com/gallery/superzip-example.html
 
 maps = c(
   "OpenStreetMap" = "default",
+  "OpenTopoMap" = "OpenTopoMap",
+  "Esri.WorldTopoMap" = "Esri.WorldTopoMap",
+  "Esri.WorldImagery" = "Esri.WorldImagery",
+  "HERE.hybridDay" = "HERE.hybridDay",
+  "NASAGIBS.ViirsEarthAtNight2012" = "NASAGIBS.ViirsEarthAtNight2012",
   "Stamen.Toner" = "Stamen.Toner",
   "Stamen.TonerLite" = "Stamen.TonerLite",
-  "Stamen.TonerLabels" = "Stamen.TonerLabels",
   "Stamen.TonerLines" = "Stamen.TonerLines",
   "CartoDB.Positron" = "CartoDB.Positron"
 )
@@ -241,6 +254,7 @@ states = c(
   "Colorado" = "CO",
   "Connecticut" = "CT",
   "Delaware" = "DE",
+  "District of Columbia" = "DC",
   "Florida" = "FL",
   "Georgia" = "GA",
   "Hawaii" = "HI",
@@ -285,10 +299,15 @@ states = c(
   "Wyoming"	= "WY"
 )
 
+state_latlong = read.csv("state_latlong.csv", stringsAsFactors = F, header = T)
+
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
 
-    
+    tabPanel("Interactive map",
+      div(class="outer",
+  
+        tags$head(includeCSS("styles.css")),
   
         # If not using custom CSS, set height of leafletOutput to a number instead of percent
         leafletOutput("map", width="100%", height="100%"),
@@ -326,6 +345,53 @@ shinyApp(
   )
   ,
   server = function(input, output, session){
+    
+    observe({
+      
+      fires.df = fires %>% filter((input$datefrom <= DISCOVERY_DATE)&(DISCOVERY_DATE <= input$dateto))
+      if (input$state != "All"){
+        fires.df = fires.df %>% filter(STATE == input$state)
+      }
+      
+      locations = fires.df %>% select(LONGITUDE, LATITUDE)
+      
+      #popups = fires.df %>% paste(paste0("<b>", FOD_ID,"</b>"),
+                                  #paste0("Discovery Date: ", DISCOVERY_DATE),
+                                  #paste0("Latitude: ", LATITUDE),
+                                  #paste0("Longitude: ", LONGITUDE),
+                                  #paste0("Fire Size: ", FIRE_SIZE),
+                                  #paste0("Fire Class: ", FIRE_SIZE_CLASS),
+                                  #paste0("Cause: ", STAT_CAUSE_DESCR),
+                                  #sep = "<br/>")
+      
+      stateBy = input$state
+      mapBy = input$basemap
+      
+      maplat = 37.45 
+      maplong = -93.85
+      zoom = 4
+      
+      if (stateBy != "All"){
+        maplat = state_latlong$Latitude[state_latlong$State == stateBy]
+        maplong = state_latlong$Longitude[state_latlong$State == stateBy]
+        zoom = 10
+      }
+      
+      if (mapBy == "default")
+      {
+        output$map <- renderLeaflet({
+          leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
+            addTiles() %>% 
+            addMarkers(data = locations)  })
+      }
+      else{
+        output$map <- renderLeaflet({
+          leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
+            addProviderTiles(mapBy,
+                              options = providerTileOptions(noWrap = TRUE)) %>%
+            addMarkers(data = locations) })
+      }
+    })
     
   }
 )
