@@ -222,8 +222,107 @@ shinyApp(
 ```{r Shiny}
 #REFERENCE: https://shiny.rstudio.com/gallery/superzip-example.html
 
+maps = c(
+  "OpenStreetMap" = "default",
+  "Stamen.Toner" = "Stamen.Toner",
+  "Stamen.TonerLite" = "Stamen.TonerLite",
+  "Stamen.TonerLabels" = "Stamen.TonerLabels",
+  "Stamen.TonerLines" = "Stamen.TonerLines",
+  "CartoDB.Positron" = "CartoDB.Positron"
+)
+
+states = c(
+  "All States" = "All",
+  "Alabama" =	"AL",
+  "Alaska" = "AK",
+  "Arizona"	= "AZ",
+  "Arkansas" = "AR",
+  "California" = "CA",
+  "Colorado" = "CO",
+  "Connecticut" = "CT",
+  "Delaware" = "DE",
+  "Florida" = "FL",
+  "Georgia" = "GA",
+  "Hawaii" = "HI",
+  "Idaho" = "ID",
+  "Illinois" = "IL",
+  "Indiana" = "IN",
+  "Iowa" = "IA",
+  "Kansas" = "KS",
+  "Kentucky" = "KY",
+  "Louisiana" = "LA",
+  "Maine" = "ME",
+  "Maryland" = "MD",
+  "Massachusetts" = "MA",
+  "Michigan" = "MI",
+  "Minnesota" = "MN",
+  "Mississippi" = "MS",
+  "Missouri" = "MO",
+  "Montana" = "MT",
+  "Nebraska" = "NE",
+  "Nevada" = "NV",
+  "New Hampshire" = "NH",
+  "New Jersey" = "NJ",
+  "New Mexico" = "NM",
+  "New York" = "NY",
+  "North Carolina" = "NC",
+  "North Dakota" = "ND",
+  "Ohio" = "OH",
+  "Oklahoma" = "OK",
+  "Oregon" = "OR",
+  "Pennsylvania" = "PA",
+  "Rhode Island" = "RI",
+  "South Carolina" = "SC",
+  "South Dakota" = "SD",
+  "Tennessee" = "TN",
+  "Texas" = "TX",
+  "Utah" = "UT",
+  "Vermont"	= "VT",
+  "Virginia" = "VA",
+  "Washington" = "WA",
+  "West Virginia" = "WV",
+  "Wisconsin" = "WI",
+  "Wyoming"	= "WY"
+)
+
 shinyApp(
-  ui = navbarPage("US Wildfires", id="nav"
+  ui = navbarPage("US Wildfires", id="nav",
+
+    tabPanel("Interactive map",
+      div(class="outer",
+  
+        
+  
+        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+          draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+          width = 330, height = "auto",
+  
+          h3("US Wildfires explorer"),
+  
+          selectInput("basemap", "Base Map", maps),
+          selectInput("state", "States", states, selected = "All"),
+          dateInput("datefrom", "Select the Start Date", value = "2015-12-25", min = "1992-01-01", max = "2015-12-31"),
+          dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31")
+        ),
+        absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
+          draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
+          width = 360, height = "auto",
+                    
+          h3("Plot Explorer")
+          
+          
+        ),
+  
+        tags$div(id="cite",
+          tags$em('Short, Karen C. 2017. Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508]. 4th Edition. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2013-0009.4')
+        )
+      )
+    ),
+  
+    tabPanel("Data explorer"
+    ),
+  
+    conditionalPanel("false", icon("crosshair"))
   )
   ,
   server = NULL
