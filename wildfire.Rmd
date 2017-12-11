@@ -212,3 +212,15 @@ shinyApp(
   }
 )
 ```
+
+
+```{r Shiny}
+#REFERENCE: https://shiny.rstudio.com/gallery/superzip-example.html
+
+shinyApp(
+  ui = navbarPage("US Wildfires", id="nav"
+  )
+  ,
+  server = NULL
+)
+```
