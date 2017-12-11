@@ -11,10 +11,13 @@ library(RSQLite)
 library(dbplyr)
 library(dplyr)
 library(purrr)
+library(ggmap)
 library(ggplot2)
+library(ggthemes)
+library(animation)
 ```
 
-```{r}
+```{r plotgif}
 download.file(url = "https://storage.googleapis.com/kaggle-datasets/2478/4139/FPA_FOD_20170508.sqlite.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1513189819&Signature=myp%2BB6XkMNUOfxgOsXoJbjzfSigsiX1Ds9wa8datVuulb7qk8hr5vaDh6S%2Fim9%2FygU7V%2Fpgk%2Fw%2FiPNduZsS7%2F6BUu7Lv3TSfIhPib%2B%2F0y4iCpoiii2dc1T%2B%2F2e4qY0E74yaPRgVKDQcjj1CL%2F0gF55JLr0QdkwoY5qnSt09w%2B%2B%2Bg8ZVn5jvPslhvxZDUcDlDVZdB0O%2BSdrZyu%2Flh8prBw2v2TZAzhylhok0WfbqU4MGLnGqLDa89Nf%2Fhtk%2Ba3KzadSLm04Eiv7jIh2%2FTpaYfqLPjelAHcj1KQrqjs1EK9DjLHuIPpXz2Y%2BnHM3ZLnM2iGnTRMnp5LtHd%2BQNs9GscrA%3D%3D", destfile = "data.zip")
 
 unzip("data.zip")
@@ -29,16 +32,27 @@ print(object.size(fires), units = 'Gb')
 
 fires <- fires %>% arrange(DISCOVERY_DATE, CONT_DATE)
 
+# Add codes for DC and Puerto Rico to the default state lists
+state.abb <- append(state.abb, c("DC", "PR"))
+state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
+
+# Map the state abbreviations to state names so we can join with the map data
+fires$region <- map_chr(fires$STATE, function(x) { tolower(state.name[grep(x, state.abb)]) })
+
 fires$CONT_DATEymd <- as.Date(fires$CONT_DATE - 2458014.5, origin = '2017-09-18')
 
 fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2017-09-18')
 
-firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE) %>% 
-  na.omit() %>% data.frame()
+firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
+
+# Get the us state map data
+state_map <- map_data('state')
 
 save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
 
-load("~/STA523/Project-peppa_pig/fireplot.RData")
+save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
+
+load("~/STA523/Project-peppa_pig/firesplot.RData")
 
 firesplot <- data.frame(firesplot)
 
@@ -60,32 +74,141 @@ allday <- allday %>% arrange(DISCOVERY_DATEymd)
 
 save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
 
-year1992 <- allday[substr(allday$DISCOVERY_DATEymd,1,4) == '1992',]
+plotfire <- function(State, year, month){
+  
+  if (is.null(month) == T){
+    subset <- which(substr(allday$DISCOVERY_DATEymd,1,4) == as.character(year) & 
+                    allday$STATE == State)
+  } else {
+    subset <- which(substr(allday$DISCOVERY_DATEymd,1,4) == as.character(year) & 
+                    as.numeric(substr(allday$DISCOVERY_DATEymd,6,7)) == month & 
+                    allday$STATE == State)
+  }
 
-library(ggmap)
-library(animation)
-
-npoints<- length(unique(year1992$DISCOVERY_DATEymd))
-
-map<-get_map(location='united states', zoom=4, maptype = "terrain",
-             source='google',color='color')
-
-plotfire <- function(){
-  for(i in 1:npoints){
-    date <- as.Date(year1992[1, 4]) + i - 1
-    take_df <- year1992[which(year1992$DISCOVERY_DATEymd == date), ]
-    p <- ggmap(map) + geom_point(
+  plotdata <- allday[subset, ]
+  npoints<- length(unique(plotdata$DISCOVERY_DATEymd))
+  
+  if (npoints == 0){
+    stop("Safe without a wildfire within this period")
+  } else {
+    p0 <- plotdata %>% 
+    select(region) %>%
+    left_join(state_map, by = 'region') %>%
+    ggplot(aes(x = long, y = lat)) + 
+    geom_polygon(fill= "lightblue") + 
+    theme_map() + 
+    coord_map('albers', lat0=30, lat1=40)+ guides(fill=FALSE) +
+    ggtitle(paste0(State,sep="  ",sep='Year:', year, sep="  ", sep='Month:', month)) + 
+    theme(plot.title = element_text(hjust = 0.5))
+    
+    for(i in 1:npoints){
+    date <- as.Date(plotdata[1, 4]) + i - 1
+    take_df <- plotdata[which(plotdata$DISCOVERY_DATEymd == date), ]
+    p <- p0+ geom_point(
       aes(x=LONGITUDE, y=LATITUDE, colour=FIRE_SIZE, size=FIRE_SIZE), 
-      data=take_df, alpha=.5, na.rm = T)  + 
-      scale_color_gradient(low="yellow", high="dark red") +
+      data=take_df, alpha=.5, na.rm = T)  + theme(legend.position="none")+
+      scale_color_gradient(low="red", high="dark red") +
       ggtitle(date)
     print(p)
   }
+  }
 }
 
-saveGIF(plotfire())
-
-
+State = 'NC'
+year = 2015
+month = 2
+saveGIF(plotfire(State, year, month), movie.name = paste0(State,year,month,'.gif'))
 
 ```
 
+```{r}
+
+library(shiny)
+
+
+shinyServer(function(input, output) {
+  output$testgif = downloadHandler(
+    filename = 'random.gif',
+    content  = function(file) {
+      saveGIF(
+        for (i in 1:30) {
+          plot(rnorm(100))
+        }, movie.name = 'random.gif', interval = 0.1)
+      file.rename('random.gif', file)
+    })
+})
+
+shinyUI(basicPage(
+  downloadButton("testgif")
+))
+
+
+ui <- basicPage(
+    imageOutput("plot1"))
+
+server <- function(input, output) {
+    output$plot1 <- renderImage({
+    # A temp file to save the output.
+    # This file will be removed later by renderImage
+    outfile <- tempfile(fileext='.gif')
+
+    # now make the animation
+    p = ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, 
+      color = continent, frame = year)) + geom_point() + scale_x_log10()
+
+    gg_animate(p,"outfile.gif")
+
+    # Return a list containing the filename
+     list(src = "outfile.gif",
+         contentType = 'image/gif'
+         # width = 400,
+         # height = 300,
+         # alt = "This is alternate text"
+         )}, deleteFile = TRUE)}
+
+shinyApp(ui, server)
+
+
+shinyApp(
+  ui = fluidPage(
+    titlePanel("Wildfire 1992-2015"),
+    sidebarLayout(
+      sidebarPanel(
+        helpText("Enter the state year and month to get gif of wildfires."),
+        br(),
+        textInput("State", "State Abbreviation", value = state.abb),
+        br(),
+        sliderInput("year", "Year", min = 1995, max = 2015, value = 1992),
+        br(),
+        sliderInput("month","Month", min = 1, max = 12, value = 1),
+        br(),
+        actionButton("go", "Get Gif!")
+      ),
+      
+      mainPanel(
+        uiOutput("links")
+        #wellPanel(helpText('Remark: Used data is all from NYTimes Archive'))
+      )
+    )
+  ),
+  server = function(input, output, session)
+  {
+    #when click the button get articledata
+    articledata = eventReactive(input$go, {
+      get_nyt_archive(year = as.numeric(substr(input$datein, 1, 4)),
+                       month = as.numeric(substr(input$datein, 6, 7)),
+                       day = as.numeric(substr(input$datein, 9, 10)),
+                       key = input$key)
+            }
+      )
+    headline = eventReactive(input$go, {articledata()$headline})
+    multimedia = eventReactive(input$go, {articledata()$multimedia})
+    
+    #events would be observed when click the button
+    observeEvent(input$go,{
+      }
+      )
+    
+  }
+)
+```
