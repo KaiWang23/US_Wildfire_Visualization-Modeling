@@ -27,6 +27,8 @@ conn <- dbConnect(SQLite(), "FPA_FOD_20170508.sqlite")
 # pull the fires table into RAM
 fires <- tbl(conn, "Fires") %>% collect()
 
+dbDisconnect(conn)
+
 print(object.size(fires), units = 'Gb')
 
 fires <- fires %>% arrange(DISCOVERY_DATE, CONT_DATE)
