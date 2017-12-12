@@ -2,7 +2,9 @@
 title: "Wildfire"
 author: "Peppa pig"
 date: "12/10/2017"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -96,9 +98,9 @@ allday <- allday %>% arrange(DISCOVERY_DATEymd)
 
 
 ```{r load data}
-#load("~/STA523/Project-peppa_pig/fires.RData")
-#load("~/STA523/Project-peppa_pig/firesplot.RData")
-#load("~/STA523/Project-peppa_pig/allday.RData")
+load("~/STA523/Project-peppa_pig/fires.RData")
+load("~/STA523/Project-peppa_pig/firesplot.RData")
+load("~/STA523/Project-peppa_pig/allday.RData")
 ```
 
 ```{r plot function}
@@ -371,9 +373,7 @@ shinyApp(
   
     tabPanel("Data explorer",
     div(
-    
-      
-      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+      absolutePanel(id = "control1", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
   
@@ -395,28 +395,22 @@ shinyApp(
     
     tabPanel("Get Gif",
     div(
-    
-      
-      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+      absolutePanel(id = "control2", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
-  
           h3("US Wildfires explorer"),
   
           selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
           br(),
-          sliderInput("Y", "Year", min = 1992, max = 2015, value = 1992),
+          numericInput("Y", "Year", min = 1992, max = 2015, value = 1992),
           br(),
-          sliderInput("M","Month", min = 1, max = 12, value = 1),
+          numericInput("M","Month", min = 1, max = 12, value = 1),
           br(),
           actionButton("go", "Get Gif!")
           ), 
        withSpinner(imageOutput('animated_image'), type=5)
       )
     ),
-    
-    
-    
     conditionalPanel("false", icon("crosshair"))
   )
   ,
