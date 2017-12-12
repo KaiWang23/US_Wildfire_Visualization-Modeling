@@ -361,21 +361,21 @@ shinyApp(
     
     observe({
       
-      fires.df = fires %>% filter((input$datefrom <= DISCOVERY_DATE)&(DISCOVERY_DATE <= input$dateto))
+      fires.df = fires %>% filter((input$datefrom <= DISCOVERY_DATEymd)&(DISCOVERY_DATEymd <= input$dateto))
       if (input$state != "All"){
         fires.df = fires.df %>% filter(STATE == input$state)
       }
       
-      locations = fires.df %>% select(LONGITUDE, LATITUDE)
-      
-      #popups = fires.df %>% paste(paste0("<b>", FOD_ID,"</b>"),
-                                  #paste0("Discovery Date: ", DISCOVERY_DATE),
-                                  #paste0("Latitude: ", LATITUDE),
-                                  #paste0("Longitude: ", LONGITUDE),
-                                  #paste0("Fire Size: ", FIRE_SIZE),
-                                  #paste0("Fire Class: ", FIRE_SIZE_CLASS),
-                                  #paste0("Cause: ", STAT_CAUSE_DESCR),
-                                  #sep = "<br/>")
+      popups.df = fires.df %>% 
+        mutate(pop = paste(paste0("<b>", FOD_ID,"</b>"),
+                           paste0("Discovery Date: ", DISCOVERY_DATEymd),
+                           paste0("Latitude: ", LATITUDE),
+                           paste0("Longitude: ", LONGITUDE),
+                           paste0("Fire Size: ", FIRE_SIZE),
+                           paste0("Fire Class: ", FIRE_SIZE_CLASS),
+                           paste0("Cause: ", STAT_CAUSE_DESCR),
+                           sep = "<br/>")) %>% 
+        select(LONGITUDE, LATITUDE, pop)
       
       stateBy = input$state
       mapBy = input$basemap
@@ -387,7 +387,7 @@ shinyApp(
       if (stateBy != "All"){
         maplat = state_latlong$Latitude[state_latlong$State == stateBy]
         maplong = state_latlong$Longitude[state_latlong$State == stateBy]
-        zoom = 10
+        zoom = 7
       }
       
       if (mapBy == "default")
@@ -395,14 +395,14 @@ shinyApp(
         output$map <- renderLeaflet({
           leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
             addTiles() %>% 
-            addMarkers(data = locations)  })
+            addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, data = popups.df)  })
       }
       else{
         output$map <- renderLeaflet({
           leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
             addProviderTiles(mapBy,
                               options = providerTileOptions(noWrap = TRUE)) %>%
-            addMarkers(data = locations) })
+            addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, data = popups.df) })
       }
     })
     
