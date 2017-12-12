@@ -61,9 +61,6 @@ fires$CONT_DATEymd <- as.Date(fires$CONT_DATE - 2458014.5, origin = '2017-09-18'
 
 fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2017-09-18')
 
-fires = fires %>% 
-  select(FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, CONT_DATE, CONT_DOY, CONT_TIME, FIRE_SIZE, FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, COUNTY, FIPS_CODE, FIPS_NAME, region, CONT_DATEymd, DISCOVERY_DATEymd)
-
 firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
 
 save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
@@ -329,6 +326,10 @@ states = c(
 )
 
 state_latlong = read.csv("state_latlong.csv", stringsAsFactors = F, header = T)
+state.prev=NULL
+model.prev=NULL
+dataset.prev=NULL
+
 
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
@@ -401,11 +402,11 @@ shinyApp(
   
           h3("US Wildfires explorer"),
   
-          selectInput("State", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
+          selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
           br(),
-          sliderInput("year", "Year", min = 1992, max = 2015, value = 1992),
+          sliderInput("Y", "Year", min = 1992, max = 2015, value = 1992),
           br(),
-          sliderInput("month","Month", min = 1, max = 12, value = 1),
+          sliderInput("M","Month", min = 1, max = 12, value = 1),
           br(),
           actionButton("go", "Get Gif!")
           ), 
@@ -478,7 +479,12 @@ shinyApp(
       
          
 
+
+      
+      
+    })
     
+        
     output$interactive_map= renderLeaflet({
         fires.aux=getTree("NC","1992",1,1)
         fires.aux %>%
@@ -530,15 +536,12 @@ shinyApp(
     observeEvent(input$go, {
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
-      saveGIF(plotfire(isolate(input$State), isolate(input$year), isolate(input$month)), movie.name = "outfile.gif")
+      saveGIF(plotfire(isolate(input$S), isolate(input$Y), isolate(input$M)), movie.name = "outfile.gif")
       contentType = 'image/gif'
       list(src="outfile.gif")
     }, deleteFile = T)})    
     
     
-      
-      
-    })
     
   }
 )
