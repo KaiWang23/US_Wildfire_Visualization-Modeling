@@ -334,7 +334,8 @@ shinyApp(
           selectInput("basemap", "Base Map", maps),
           selectInput("state", "States", states, selected = "All"),
           dateInput("datefrom", "Select the Start Date", value = "2015-12-25", min = "1992-01-01", max = "2015-12-31"),
-          dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31")
+          dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31"),
+          actionButton("button", "Search")
         ),
         absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
@@ -359,7 +360,7 @@ shinyApp(
   ,
   server = function(input, output, session){
     
-    observe({
+    observeEvent(input$button,{
       
       fires.df = fires %>% filter((input$datefrom <= DISCOVERY_DATEymd)&(DISCOVERY_DATEymd <= input$dateto))
       if (input$state != "All"){
@@ -387,7 +388,7 @@ shinyApp(
       if (stateBy != "All"){
         maplat = state_latlong$Latitude[state_latlong$State == stateBy]
         maplong = state_latlong$Longitude[state_latlong$State == stateBy]
-        zoom = 7
+        zoom = 6
       }
       
       if (mapBy == "default")
