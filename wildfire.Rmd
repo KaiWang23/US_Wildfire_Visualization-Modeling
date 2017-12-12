@@ -48,6 +48,9 @@ dbDisconnect(conn)
 
 print(object.size(fires), units = 'Gb')
 
+fires = fires %>% 
+  select(FOD_ID, FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, CONT_DATE, CONT_DOY, CONT_TIME, FIRE_SIZE, FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, FIRE_NAME, SOURCE_REPORTING_UNIT_NAME, STAT_CAUSE_DESCR)
+
 fires <- fires %>% arrange(DISCOVERY_DATE, CONT_DATE)
 
 # Add codes for DC and Puerto Rico to the default state lists
@@ -63,17 +66,17 @@ fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2
 
 firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
 
-save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
+#save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
 
 firesplot <- data.frame(firesplot)
 
-save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
+#save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
 
 # Get the us state map data
 state_map <- map_data('state')
 
 days <- apply(firesplot, 1, function(x){
-  if(x[4]!=x[5]){
+  if(x[4] != x[5] ){
     return(seq(as.Date(x[5]), as.Date(x[4]), by="days"))
   }
 })
@@ -88,19 +91,17 @@ allday <- rbind(newdataframe[,-4], firesplot[-notoneday,-4])
 
 allday <- allday %>% arrange(DISCOVERY_DATEymd) 
 
-save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
+#save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
 ```
 
 
 ```{r load data}
-load("~/STA523/Project-peppa_pig/fires.RData")
-load("~/STA523/Project-peppa_pig/firesplot.RData")
-load("~/STA523/Project-peppa_pig/allday.RData")
+#load("~/STA523/Project-peppa_pig/fires.RData")
+#load("~/STA523/Project-peppa_pig/firesplot.RData")
+#load("~/STA523/Project-peppa_pig/allday.RData")
 ```
 
 ```{r plot function}
-state.abb <- append(state.abb, c("DC", "PR"))
-state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
 state_map <- map_data('state')
 
 
