@@ -15,20 +15,30 @@ library(ggmap)
 library(ggplot2)
 library(ggthemes)
 library(animation)
+library(leaflet)
+library(dbplyr)
+library(caret)
+library(rpart.plot)
+library(knitr)
+library(chron)
+library(kableExtra)
+library(date)
+library(lubridate)
+library(shiny)
+library(shinycssloaders)
+library(RColorBrewer)
+library(scales)
+library(lattice)
 ```
 
 
-```{r}
+```{r save fires/firesplot}
 #download dataset and remove zip file afterwards
 download.file(url = "https://storage.googleapis.com/kaggle-datasets/2478/4139/FPA_FOD_20170508.sqlite.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1513189819&Signature=myp%2BB6XkMNUOfxgOsXoJbjzfSigsiX1Ds9wa8datVuulb7qk8hr5vaDh6S%2Fim9%2FygU7V%2Fpgk%2Fw%2FiPNduZsS7%2F6BUu7Lv3TSfIhPib%2B%2F0y4iCpoiii2dc1T%2B%2F2e4qY0E74yaPRgVKDQcjj1CL%2F0gF55JLr0QdkwoY5qnSt09w%2B%2B%2Bg8ZVn5jvPslhvxZDUcDlDVZdB0O%2BSdrZyu%2Flh8prBw2v2TZAzhylhok0WfbqU4MGLnGqLDa89Nf%2Fhtk%2Ba3KzadSLm04Eiv7jIh2%2FTpaYfqLPjelAHcj1KQrqjs1EK9DjLHuIPpXz2Y%2BnHM3ZLnM2iGnTRMnp5LtHd%2BQNs9GscrA%3D%3D", destfile = "data.zip")
 
 unzip("data.zip")
-
 file.remove("data.zip")
-```
 
-```{r}
-#load data
 conn <- dbConnect(SQLite(), "FPA_FOD_20170508.sqlite")
 
 # pull the fires table into RAM
@@ -38,16 +48,6 @@ dbDisconnect(conn)
 
 print(object.size(fires), units = 'Gb')
 
-fires = fires %>% 
-  select(FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, CONT_DATE, CONT_DOY, CONT_TIME, FIRE_SIZE, FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, COUNTY, FIPS_CODE, FIPS_NAME)
-
-print(object.size(fires), units = 'Gb')
-
-save(fires, file = "fires.Rdata")
-```
-
-```{r plotgif}
-load("fires.Rdata")
 fires <- fires %>% arrange(DISCOVERY_DATE, CONT_DATE)
 
 # Add codes for DC and Puerto Rico to the default state lists
@@ -63,16 +63,15 @@ fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2
 
 firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
 
-# Get the us state map data
-state_map <- map_data('state')
-
 save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
+
+firesplot <- data.frame(firesplot)
 
 save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
 
-load("~/STA523/Project-peppa_pig/firesplot.RData")
+# Get the us state map data
+state_map <- map_data('state')
 
-firesplot <- data.frame(firesplot)
 
 days <- apply(firesplot, 1, function(x){
   if(x[4]!=x[5]){
@@ -91,6 +90,20 @@ allday <- rbind(newdataframe[,-4], firesplot[-notoneday,-4])
 allday <- allday %>% arrange(DISCOVERY_DATEymd) 
 
 save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
+```
+
+
+```{r load data}
+load("~/STA523/Project-peppa_pig/fires.RData")
+load("~/STA523/Project-peppa_pig/firesplot.RData")
+load("~/STA523/Project-peppa_pig/allday.RData")
+```
+
+```{r plot function}
+state.abb <- append(state.abb, c("DC", "PR"))
+state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
+state_map <- map_data('state')
+
 
 plotfire <- function(State, year, month){
   
@@ -132,115 +145,127 @@ plotfire <- function(State, year, month){
   }
 }
 
-State = 'NC'
-year = 2015
-month = 2
-saveGIF(plotfire(State, year, month), movie.name = paste0(State,year,month,'.gif'))
-
-```
-
-```{r}
-
-library(shiny)
+saveGIF(plotfire('CA', 2004 , 5), movie.name = paste0('CA',2004,5,'.gif'))
 
 
-shinyServer(function(input, output) {
-  output$testgif = downloadHandler(
-    filename = 'random.gif',
-    content  = function(file) {
-      saveGIF(
-        for (i in 1:30) {
-          plot(rnorm(100))
-        }, movie.name = 'random.gif', interval = 0.1)
-      file.rename('random.gif', file)
-    })
-})
-
-shinyUI(basicPage(
-  downloadButton("testgif")
-))
 
 
-ui <- basicPage(
-    imageOutput("plot1"))
-
-server <- function(input, output) {
-    output$plot1 <- renderImage({
-    # A temp file to save the output.
-    # This file will be removed later by renderImage
-    outfile <- tempfile(fileext='.gif')
-
-    # now make the animation
-    p = ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, 
-      color = continent, frame = year)) + geom_point() + scale_x_log10()
-
-    gg_animate(p,"outfile.gif")
-
-    # Return a list containing the filename
-     list(src = "outfile.gif",
-         contentType = 'image/gif'
-         # width = 400,
-         # height = 300,
-         # alt = "This is alternate text"
-         )}, deleteFile = TRUE)}
-
-shinyApp(ui, server)
 
 
-shinyApp(
-  ui = fluidPage(
-    titlePanel("Wildfire 1992-2015"),
-    sidebarLayout(
-      sidebarPanel(
-        helpText("Enter the state year and month to get gif of wildfires."),
-        br(),
-        textInput("State", "State Abbreviation", value = state.abb),
-        br(),
-        sliderInput("year", "Year", min = 1995, max = 2015, value = 1992),
-        br(),
-        sliderInput("month","Month", min = 1, max = 12, value = 1),
-        br(),
-        actionButton("go", "Get Gif!")
-      ),
-      
-      mainPanel(
-        uiOutput("links")
-        #wellPanel(helpText('Remark: Used data is all from NYTimes Archive'))
-      )
-    )
-  ),
-  server = function(input, output, session)
-  {
-    #when click the button get articledata
-    articledata = eventReactive(input$go, {
-      get_nyt_archive(year = as.numeric(substr(input$datein, 1, 4)),
-                       month = as.numeric(substr(input$datein, 6, 7)),
-                       day = as.numeric(substr(input$datein, 9, 10)),
-                       key = input$key)
-            }
-      )
-    headline = eventReactive(input$go, {articledata()$headline})
-    multimedia = eventReactive(input$go, {articledata()$multimedia})
+
+
+#model for prediction
+getTree=function(state.name,year,month,day_of_week,open=T){
+  
+  if(open){
+    fires.state=fires[fires$STATE==state.name,]
+    df.return=fires.state%>%
+      select(c(FIRE_NAME,STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+      mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+      mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+      mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+      mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+      mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+                                       "Accidental"))))%>%
+      filter(YEAR==year)%>%
+      filter(MONTH==month)%>%
+      filter(DAY_OF_WEEK==day_of_week)%>%
+      select(LONGITUDE,LATITUDE,FIRE_SIZE,FIRE_NAME,STAT_CAUSE_DESCR,CAUSE_RECODE)
     
-    #events would be observed when click the button
-    observeEvent(input$go,{
-      }
-      )
-    
+    return(df.return)
   }
-)
+  
+  if(!is.null(state.prev) && state.name==state.prev){
+    rfmodel=model.prev
+    fires.state=dataset.prev
+  }
+  else{
+    fires.state=fires[fires$STATE==state.name,]
+
+    if(nrow(fires.state)<5000){
+     fires.sample=fires.state
+    }else{
+     p=5000/nrow(fires.state)
+     sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
+     fires.sample=fires.state[sampling.index,]
+    }
+
+#select the variables we would like to use and tansform them into appropriate format
+fires.sample=fires.sample%>%
+  select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+  mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+  mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+  mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+  mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+                                       "Accidental"))))%>%
+  select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR))
+  
+#change classes of some variables to factor
+factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
+fires.sample[factornames] = lapply(fires.sample[factornames], factor)
+
+#create training data frame
+predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
+
+x.train=fires.sample[,predictors]
+y.train=fires.sample$CAUSE_RECODE
+
+
+#random forest
+tr.control=trainControl(method="cv",number=3)
+
+rfmodel <- train(x = x.train,
+                 y = y.train,
+                 method = 'rf',
+                 tuneLength = 3,
+                 ntree = 2,
+                 trControl = tr.control)
+
+model.prev<<-rfmodel
+state.prev<<-state.name
+dataset.prev<<-fires.state
+}
+
+x.train.new=fires.state%>%
+  select(c(FIRE_NAME,STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+  mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+  mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+  mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+  mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+                                       "Accidental"))))%>%
+  select(-c(DISCOVERY_DATE,DATE))
+  
+#change classes of some variables to factor
+factornames=colnames(x.train.new)[!colnames(x.train.new) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE","FIRE_NAME","STAT_CAUSE_DESCR","CAUSE_RECODE")]
+x.train.new[factornames] = lapply(x.train.new[factornames], factor)
+
+x.train.new=x.train.new%>%
+  filter(YEAR==year)%>%
+  filter(MONTH==month)%>%
+  filter(DAY_OF_WEEK==day_of_week)
+
+preds=predict(rfmodel,x.train.new)
+
+df.return=x.train.new%>%
+  select(LONGITUDE,LATITUDE,FIRE_SIZE,FIRE_NAME,STAT_CAUSE_DESCR,CAUSE_RECODE)%>%
+  mutate(CAUSE=preds)
+
+return(df.return)
+
+}
 ```
 
 
 ```{r Shiny}
-library(shiny)
-library(leaflet)
-library(RColorBrewer)
-library(scales)
-library(lattice)
-library(dplyr)
-library(ggplot2)
-library(lubridate)
+
 
 #REFERENCE: https://shiny.rstudio.com/gallery/superzip-example.html
 
