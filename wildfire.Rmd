@@ -61,6 +61,9 @@ fires$CONT_DATEymd <- as.Date(fires$CONT_DATE - 2458014.5, origin = '2017-09-18'
 
 fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2017-09-18')
 
+fires = fires %>% 
+  select(FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, CONT_DATE, CONT_DOY, CONT_TIME, FIRE_SIZE, FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, COUNTY, FIPS_CODE, FIPS_NAME, region, CONT_DATEymd, DISCOVERY_DATEymd)
+
 firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
 
 save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
@@ -71,7 +74,6 @@ save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
 
 # Get the us state map data
 state_map <- map_data('state')
-
 
 days <- apply(firesplot, 1, function(x){
   if(x[4]!=x[5]){
@@ -383,15 +385,36 @@ shinyApp(
           br(),
           sliderInput("d.of.w", "Day of Week", min =1, max=7,value=1),
           br(),
-          actionButton("go2", "Predict Cause!"),
+          actionButton("go2", "Predict Cause!")
+          ), 
+       withSpinner(leafletOutput('interactive_map'), type=1)
+      )
+    ),
+    
+    tabPanel("Get Gif",
+    div(
+    
+      
+      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+          width = 330, height = "auto",
+  
+          h3("US Wildfires explorer"),
+  
+          selectInput("State", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
+          br(),
+          sliderInput("year", "Year", min = 1992, max = 2015, value = 1992),
+          br(),
+          sliderInput("month","Month", min = 1, max = 12, value = 1),
           br(),
           actionButton("go", "Get Gif!")
           ), 
-       withSpinner(leafletOutput('interactive_map'), type=1),
        withSpinner(imageOutput('animated_image'), type=5)
       )
     ),
-  
+    
+    
+    
     conditionalPanel("false", icon("crosshair"))
   )
   ,
@@ -453,15 +476,10 @@ shinyApp(
                            options = providerTileOptions(noWrap = TRUE)) %>%
           addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, label = ~la, data = popups.df) })
       
-          output$animated_image <- renderImage({
-      outfile <- tempfile(fileext='.gif')
-      saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
-      contentType = 'image/gif'
-      list(src="outfile.gif")
-    }, deleteFile = T)
+         
 
-    output$interactive_map= renderLeaflet(
-      {
+    
+    output$interactive_map= renderLeaflet({
         fires.aux=getTree("NC","1992",1,1)
         fires.aux %>%
             leaflet() %>% 
@@ -474,18 +492,7 @@ shinyApp(
               paste("Fire Size:",FIRE_SIZE,"acres"),
               paste("Actual Cause:",CAUSE_RECODE),
               paste("Actual Cause In Specific:", STAT_CAUSE_DESCR)))
-      }
-    )
-    
-    observeEvent(input$go, {
-    output$animated_image <- renderImage({
-      outfile <- tempfile(fileext='.gif')
-      saveGIF(plotfire(isolate(input$State), isolate(input$year), isolate(input$month)), movie.name = "outfile.gif")
-      contentType = 'image/gif'
-      list(src="outfile.gif")
-    }, deleteFile = T)})
-    
-    
+      })
     observeEvent(input$go2, {
     output$interactive_map =renderLeaflet(
       {
@@ -509,6 +516,26 @@ shinyApp(
       }
     )
     })
+    
+    
+    
+    
+    
+    output$animated_image <- renderImage({
+      outfile <- tempfile(fileext='.gif')
+      saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
+      contentType = 'image/gif'
+      list(src="outfile.gif")
+    }, deleteFile = T)    
+    observeEvent(input$go, {
+    output$animated_image <- renderImage({
+      outfile <- tempfile(fileext='.gif')
+      saveGIF(plotfire(isolate(input$State), isolate(input$year), isolate(input$month)), movie.name = "outfile.gif")
+      contentType = 'image/gif'
+      list(src="outfile.gif")
+    }, deleteFile = T)})    
+    
+    
       
       
     })
