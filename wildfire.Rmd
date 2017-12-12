@@ -321,8 +321,6 @@ shinyApp(
       div(class="outer",
   
         tags$head(includeCSS("styles.css")),
-  
-        # If not using custom CSS, set height of leafletOutput to a number instead of percent
         leafletOutput("map", width="100%", height="100%"),
   
         absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
@@ -369,7 +367,7 @@ shinyApp(
       }
       
       popups.df = fires.df %>% 
-        mutate(pop = paste(paste0("<b>", FOD_ID,"</b>"),
+        mutate(pop = paste(paste0("<b> Global Unique ID:", FOD_ID,"</b>"),
                            paste0("Discovery Date: ", DISCOVERY_DATEymd),
                            paste0("Latitude: ", LATITUDE),
                            paste0("Longitude: ", LONGITUDE),
