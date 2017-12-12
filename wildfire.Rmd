@@ -369,13 +369,13 @@ shinyApp(
       popups.df = fires.df %>% 
         mutate(pop = paste(paste0("<b> Global Unique ID:", FOD_ID,"</b>"),
                            paste0("Discovery Date: ", DISCOVERY_DATEymd),
-                           paste0("Latitude: ", LATITUDE),
-                           paste0("Longitude: ", LONGITUDE),
+                           paste0("Source Reporting Unit: ", SOURCE_REPORTING_UNIT_NAME),
                            paste0("Fire Size: ", FIRE_SIZE),
                            paste0("Fire Class: ", FIRE_SIZE_CLASS),
                            paste0("Cause: ", STAT_CAUSE_DESCR),
-                           sep = "<br/>")) %>% 
-        select(LONGITUDE, LATITUDE, pop)
+                           sep = "<br/>"),
+               la = paste0(LATITUDE, "°N, ", abs(LONGITUDE), "°W")) %>% 
+        select(LONGITUDE, LATITUDE, pop, la)
       
       output$plot1 <- renderPlot({
         ggplot(fires.df, aes(x = DISCOVERY_DATEymd, y = FIRE_SIZE)) + 
@@ -413,7 +413,7 @@ shinyApp(
         leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
           addProviderTiles(mapBy,
                            options = providerTileOptions(noWrap = TRUE)) %>%
-          addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, data = popups.df) })
+          addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, label = ~la, data = popups.df) })
       
     })
     
