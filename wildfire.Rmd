@@ -333,7 +333,7 @@ shinyApp(
   
           selectInput("basemap", "Base Map", maps),
           selectInput("state", "States", states, selected = "All"),
-          dateInput("datefrom", "Select the Start Date", value = "2015-12-25", min = "1992-01-01", max = "2015-12-31"),
+          dateInput("datefrom", "Select the Start Date", value = "2015-12-15", min = "1992-01-01", max = "2015-12-31"),
           dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31"),
           actionButton("button", "Search")
         ),
@@ -341,9 +341,9 @@ shinyApp(
           draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
           width = 360, height = "auto",
                     
-          h3("Plot Explorer")
+          h3("Plot Explorer"),
           
-          
+          plotOutput("plot1", height = 200)
         ),
   
         tags$div(id="cite",
@@ -377,6 +377,13 @@ shinyApp(
                            paste0("Cause: ", STAT_CAUSE_DESCR),
                            sep = "<br/>")) %>% 
         select(LONGITUDE, LATITUDE, pop)
+      
+      output$plot1 <- renderPlot({
+        ggplot(fires.df, aes(x = DISCOVERY_DATEymd, y = FIRE_SIZE)) + 
+          geom_point(col = "purple") +
+          labs(title = "Fire Size by Date",x = "Date",
+               y = "Fire Size (acres)") + theme_bw()
+      })
       
       stateBy = input$state
       mapBy = input$basemap
