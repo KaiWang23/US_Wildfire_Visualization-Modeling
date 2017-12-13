@@ -98,6 +98,100 @@ load("~/STA523/Project-peppa_pig/firesplot.RData")
 load("~/STA523/Project-peppa_pig/allday.RData")
 ```
 
+```{r analysis}
+png('US Number of Wildfires by Year.png', width = 640, height = 360)
+fires %>% 
+  group_by(FIRE_YEAR) %>%
+  summarize(n_fires = n()) %>%
+  ggplot(aes(x = FIRE_YEAR, y = n_fires/1000)) + 
+  geom_line(col = 'purple', size = 1) +
+  geom_smooth(method = 'lm', se = FALSE, linetype = 'dashed', size = 0.8, color = 'red') + 
+  labs(x = '', y = 'Number of wildfires (thousands)', title = 'US Number of Wildfires by Year') + 
+  theme_bw()
+dev.off()
+
+
+png('US Number of Wildfires by Day of Year.png', width = 640, height = 360)
+fires %>% 
+  group_by(DISCOVERY_DOY) %>%
+  summarize(n_fires = n()) %>%
+  ggplot(aes(x = DISCOVERY_DOY, y = n_fires)) + 
+  geom_line(col = 'purple', size = 0.7) +
+  labs(x = '', y = 'Number of wildfires', title = 'US Number of Wildfires by Day of Year') + 
+  theme_bw()
+dev.off()
+
+png('US Number of Wildfires by Day of Year and Cause.png', width = 640, height = 360)
+fires %>% 
+  mutate(STAT_CAUSE_DESCR = as.factor(STAT_CAUSE_DESCR)) %>% 
+  group_by(DISCOVERY_DOY, STAT_CAUSE_DESCR) %>%
+  summarize(n_fires = n()) %>%
+  ggplot(aes(x = DISCOVERY_DOY, y = n_fires, col = STAT_CAUSE_DESCR)) + 
+  scale_colour_manual(values=c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#d73027", "#ff7f00", "#cab2d6", "#6a3d9a", "#4d4d4d", "#b15928", "#073a3a")) +
+  geom_line( size = 0.7) +
+  labs(x = '', y = 'Number of wildfires', title = 'US Number of Wildfires by Day of Year and Cause', color = "Cause") + 
+  theme_bw()
+dev.off()
+
+png('Total Wildfire Size by Day of Year and Cause.png', width = 640, height = 360)
+fires %>% 
+  mutate(STAT_CAUSE_DESCR = as.factor(STAT_CAUSE_DESCR)) %>% 
+  group_by(DISCOVERY_DOY, STAT_CAUSE_DESCR) %>%
+  summarize(total_size = sum(FIRE_SIZE, na.rm = TRUE)/1000) %>%
+  ggplot(aes(x = DISCOVERY_DOY, y = total_size, col = STAT_CAUSE_DESCR)) +
+  scale_colour_manual(values=c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#d73027", "#ff7f00", "#cab2d6", "#6a3d9a", "#4d4d4d", "#b15928", "#073a3a")) +
+  geom_line( size = 0.7) +
+  labs(x = '', y = 'Total Wildfire Size (thousands acres)', title = 'Total Wildfire Size by Day of Year and Cause', color = "Cause") + 
+  theme_bw()
+dev.off()
+
+png('Average Wildfire Size by Day of Year and Cause.png', width = 640, height = 360)
+fires %>% 
+  mutate(STAT_CAUSE_DESCR = as.factor(STAT_CAUSE_DESCR)) %>% 
+  group_by(DISCOVERY_DOY, STAT_CAUSE_DESCR) %>%
+  summarize(mean_size = mean(FIRE_SIZE, na.rm = TRUE)) %>%
+  ggplot(aes(x = DISCOVERY_DOY, y = mean_size, col = STAT_CAUSE_DESCR)) +
+  scale_colour_manual(values=c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#d73027", "#ff7f00", "#cab2d6", "#6a3d9a", "#4d4d4d", "#b15928", "#073a3a")) +
+  geom_line( size = 0.7) +
+  labs(x = '', y = 'Average Wildfire Size (acres)', title = 'Average Wildfire Size by Day of Year and Cause', color = "Cause") + 
+  theme_bw()
+dev.off()
+
+library(lubridate)
+png('US Number of Wildfires by Month.png', width = 640, height = 360)
+fires %>%
+  mutate(MONTH = as.factor(month(DISCOVERY_DATEymd))) %>% 
+  group_by(MONTH) %>%
+  summarize(n_fires = n()) %>%
+  ggplot(aes(x = MONTH, y = n_fires)) + 
+  geom_bar(stat = 'identity', fill = 'purple', width = 0.7) +
+  labs(x = 'Month', y = 'Number of wildfires', title = 'US Number of Wildfires by Month') + 
+  theme_bw()
+dev.off()
+
+
+png('Daily Number of Fires 1992-2015.png', width = 640, height = 360)
+fires %>% 
+  group_by(DISCOVERY_DATEymd) %>%
+  summarize(n_fires = n()) %>%
+  ggplot(aes(x = DISCOVERY_DATEymd, y = n_fires)) +
+  geom_line(col = 'purple', size = 0.7) +
+  labs(x= '', y = 'Number of fires', title = 'Daily Number of Fires 1992-2015') + 
+  theme_bw()
+dev.off()
+
+png('Average Wildfire Size by Cause.png', width = 640, height = 360)
+fires %>% 
+  group_by(STAT_CAUSE_DESCR) %>%
+  summarize(mean_size = mean(FIRE_SIZE, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(STAT_CAUSE_DESCR, mean_size), y = mean_size)) +
+  geom_bar(stat = 'identity', fill = 'purple', width = 0.7) +
+  labs(x = '', y = 'Acres', title = 'Average Wildfire Size by Cause') +
+  theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()
+```
+
+
 ```{r plot function}
 state.abb <- append(state.abb, c("DC", "PR"))
 state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
