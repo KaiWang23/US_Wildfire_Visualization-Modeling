@@ -35,9 +35,11 @@ library(lattice)
 
 Write up:
 
-1. Through url to download the dataset, the data contains 1.88 million wildfires that occurred in the United States from 1992 to 2015. The data is 0.9GB. So we save it in the space avoiding rerun the data.
+1. Through url to download the sql, then we use SQlite to get out our data. The data contains 1880465rows and 39 variables. This datafrome includes wildfires that occurred in the United States from 1992 to 2015. The data is 0.9GB. So we save it in the space avoiding rerun the data.
 
-2. Then we generate the dataset for ploting only with fire size, longitude, latitude, discover time, and continue time. This dataset we only use complete cases for plotting. 
+2. The dataset has 39 variables. We delete some variables like shape, LOCAL_FIRE_REPORT_ID, LOCAL_INCIDENT_ID. And we have 19 variables left to do visualization.
+
+3. Then we generate the dataset for ploting only with fire size, longitude, latitude, discover time, and continue time. This dataset we only use complete cases for plotting. We want to show the location and fire sizes on the map.
 
 ```{r save fires/firesplot}
 #download dataset and remove zip file afterwards
@@ -110,7 +112,9 @@ load("allday.RData")
 
 Write up:
 
-1. Here we write plotfire function to plot gif. We use savegif function to impletement the 
+1. Here we write a plotfire function to plot gif. We use savegif function to impletement the plot function. With the intial plotdata, we want to show the animation of monthly wildfires of a spcified state, year, and month. It needs a for-loop function to plot daily plots and saveGIFfunction to generate GIF. So it needs quite much time.
+
+2. Then we setup a randomforest model to predict the fire cause. The input is state, month, and day. Our predictors are longitude, latitude, state, fire sizes. This model will help fire policemen to predict the furture causes of wildfires when the policemen are noticed of a fire.
 
 
 ```{r plot function}
@@ -157,7 +161,7 @@ plotfire <- function(State, year, month){
 }
 
 #model for prediction
-getTree=function(state.name,year,month,day_of_week,open=T){
+getTree=function(state.name,year,month,day_of_week,open=T,new=F){
   
   if(open){
     fires.state=fires[fires$STATE==state.name,]
@@ -179,6 +183,8 @@ getTree=function(state.name,year,month,day_of_week,open=T){
     return(df.return)
   }
   
+  
+  
   if(!is.null(state.prev) && state.name==state.prev){
     rfmodel=model.prev
     fires.state=dataset.prev
@@ -186,26 +192,26 @@ getTree=function(state.name,year,month,day_of_week,open=T){
   else{
     fires.state=fires[fires$STATE==state.name,]
 
-    if(nrow(fires.state)<5000){
+    if(nrow(fires.state)<1000){
      fires.sample=fires.state
     }else{
-     p=5000/nrow(fires.state)
+     p=1000/nrow(fires.state)
      sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
      fires.sample=fires.state[sampling.index,]
     }
 
 #select the variables we would like to use and tansform them into appropriate format
-fires.sample=fires.sample%>%
-  select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
-  mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
-  mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
-  mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
-  mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
-  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+  fires.sample=fires.sample%>%
+    select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+    mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+    mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+    mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+    mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+    mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
                                        "Accidental"))))%>%
-  select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR))
+    select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
   
 #change classes of some variables to factor
 factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
@@ -263,7 +269,81 @@ df.return=x.train.new%>%
 return(df.return)
 
 }
+
+getNew=function(state.name,year,month,day_of_week,latitude,longitude,firesize){
+  
+  if(!is.null(state.prev) && state.name==state.prev){
+    rfmodel=model.prev
+    fires.state=dataset.prev
+  }
+  else{
+    fires.state=fires[fires$STATE==state.name,]
+
+    if(nrow(fires.state)<1000){
+     fires.sample=fires.state
+    }else{
+     p=1000/nrow(fires.state)
+     sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
+     fires.sample=fires.state[sampling.index,]
+    }
+
+#select the variables we would like to use and tansform them into appropriate format
+  fires.sample=fires.sample%>%
+    select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+    mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+    mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+    mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+    mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+    mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
+                                       "Accidental"))))%>%
+    select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
+  
+#change classes of some variables to factor
+factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
+fires.sample[factornames] = lapply(fires.sample[factornames], factor)
+
+#create training data frame
+predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
+
+x.train=fires.sample[,predictors]
+y.train=fires.sample$CAUSE_RECODE
+
+
+#random forest
+tr.control=trainControl(method="cv",number=3)
+
+rfmodel <- train(x = x.train,
+                 y = y.train,
+                 method = 'rf',
+                 tuneLength = 3,
+                 ntree = 2,
+                 trControl = tr.control)
+
+model.prev<<-rfmodel
+state.prev<<-state.name
+dataset.prev<<-fires.state
+}
+
+x.train.new=data.frame(MONTH=as.factor(month),LATITUDE=as.numeric(latitude),LONGITUDE=as.numeric(longitude),FIRE_SIZE=as.numeric(firesize),DAY_OF_WEEK=as.factor(day_of_week))
+
+levels(x.train.new$MONTH)=levels(x.train$MONTH)
+levels(x.train.new$DAY_OF_WEEK)=levels(x.train$DAY_OF_WEEK)
+
+pred=predict(rfmodel,x.train.new)
+
+return(pred)
+}
 ```
+
+Write up:
+
+We use navbarPage and leaflet to build a neat shiny. We have three total tabs, then we place each function in each tab. The first tab is showing the total map of fires. When we put the mouth icon on one point, it will turn out the discover date, unique id, fire size, fire class and cause. On the left pannel, it will show the corresponding fire causes and fire sizes by date.
+
+On the second tab, we also have leaflet map. And this time we want to use our model to predict the cause of fires. When we click on prediction buttons, it will predic the fire causes of points on the map. Then we can enter the longtitude, latitude, firesize and then the model will return a most possible fire cause. It helps firepolice to identify the fire causes when they receive a unclear fire emergency.
+
+The last tab contains a gif of the wildfires distribution. When we enter a state, year, month, it will generate the gif showing the animation of the daily wildfires distribution. And also we use withSpinner function to add a spinner (loader) that shows when an output is recalculating.
 
 
 ```{r Shiny}
@@ -345,7 +425,7 @@ dataset.prev=NULL
 
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
-
+    #first tab panel
     tabPanel("Interactive map",
       div(class="outer",
   
@@ -380,11 +460,13 @@ shinyApp(
       )
     ),
   
+    #second tab panel
     tabPanel("Data explorer",
-    div(
-      tags$head(includeCSS("styles.css")),
-       withSpinner(leafletOutput('interactive_map'), type=1),
-      absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
+    div(class="outer",
+  
+      tags$head(includeCSS("styles_new.css")),
+       leafletOutput('interactive_map',width = "100%",height = "100%"),
+      absolutePanel(id = "control_new", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
   
@@ -399,17 +481,41 @@ shinyApp(
           sliderInput("d.of.w", "Day of Week", min =1, max=7,value=1),
           br(),
           actionButton("go2", "Predict Cause!")
-          )
+          ),
+      absolutePanel(id = "predict_new", class = "panel panel-default", fixed = TRUE,
+          draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
+          width = 400, height = "auto",
+                    
+          h3("Predict New"),
+          selectInput("state.new", "State Abbreviation:", choices = state.abb, selected = state.abb[33]),
+          br(),
+          numericInput("year.new","Year:",min = 2016,max = 2050,value = 2016),
+          br(),
+          sliderInput("month.new","Month:", min = 1, max = 12, value = 1),
+          br(),
+          sliderInput("d.of.w.new", "Day of Week:", min =1, max=7,value=1),
+          br(),
+          numericInput("lat.new","Latitude:",min = 0,max = 90,value = 0),
+          br(),
+          numericInput("long.new","Longitude:",min=-180,max = 180,value = 0),
+          br(),
+          numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 0),
+          br(),
+          actionButton("go.new", "Predict New Fire!"),
+          
+          textOutput("cause.new")
+        )
       )
     ),
     
+    #third tab panel
     tabPanel("Get Gif",
     div(
       tags$head(includeCSS("styles.css")),
       withSpinner(imageOutput('animated_image'), type=5),
       absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 300, left = "auto", right = 10, bottom = "auto",
-          width = 330, height = "auto",
+          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+          width = 400, height = "auto",
           h3("US Wildfires explorer"),
   
           selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
@@ -426,6 +532,7 @@ shinyApp(
     conditionalPanel("false", icon("crosshair"))
   )
   ,
+  
   server = function(input, output, session){
     
     observeEvent(input$button,{
@@ -443,7 +550,7 @@ shinyApp(
                            paste0("Fire Class: ", FIRE_SIZE_CLASS),
                            paste0("Cause: ", STAT_CAUSE_DESCR),
                            sep = "<br/>"),
-               la = paste0(LATITUDE, "°N, ", abs(LONGITUDE), "°W")) %>% 
+               la = paste0(LATITUDE, "??N, ", abs(LONGITUDE), "??W")) %>% 
         select(LONGITUDE, LATITUDE, pop, la)
       
       output$plot1 <- renderPlot({
@@ -500,11 +607,15 @@ shinyApp(
               paste("Actual Cause:",CAUSE_RECODE),
               paste("Actual Cause In Specific:", STAT_CAUSE_DESCR)))
       })
+    
+    
+    
     observeEvent(input$go2, {
     output$interactive_map =renderLeaflet(
       {
         fires.aux=getTree(isolate(input$State),isolate(as.numeric(input$year)),isolate(as.numeric(input$month)),isolate(as.numeric(input$d.of.w)),open = FALSE)
         
+       
         fires.aux %>%
             leaflet() %>% 
             #setView(lat = -0.900653, lng = -78.467834, zoom = 7) %>% 
@@ -520,10 +631,20 @@ shinyApp(
               paste("Actual Cause In Specific:", STAT_CAUSE_DESCR))
 
             )
+
       }
     )
     })
     
+    
+    observeEvent(input$go.new,
+                 {
+                   output$cause.new=renderText(
+                     as.character(getNew(isolate(input$state.new),isolate(as.numeric(input$year.new)),isolate(as.numeric(input$month.new)),isolate(as.numeric(input$d.of.w.new)),isolate(as.numeric(input$lat.new)),isolate(as.numeric(input$long.new)),isolate(as.numeric(input$fire.size.new)))
+                     
+                   ))
+                 }
+    )
       
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
