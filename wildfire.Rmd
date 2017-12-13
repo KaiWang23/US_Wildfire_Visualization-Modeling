@@ -523,6 +523,15 @@ shinyApp(
       }
     )
     })
+    
+      
+    output$animated_image <- renderImage({
+      outfile <- tempfile(fileext='.gif')
+      saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
+      contentType = 'image/gif'
+      list(src="outfile.gif")
+    }, deleteFile = T)  
+    
   
     observeEvent(input$go, {
     output$animated_image <- renderImage({
