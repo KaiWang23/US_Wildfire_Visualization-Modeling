@@ -529,3 +529,11 @@ shinyApp(
   }
 )
 ```
+
+Reference:
+
+1.Leaflet: https://shiny.rstudio.com/gallery/superzip-example.html 
+
+2.Some ggplots: https://www.kaggle.com/captcalculator/wildfire-exploratory-analysis
+
+3.Save gif: https://robjhyndman.com/hyndsight/animations/
