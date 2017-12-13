@@ -464,19 +464,13 @@ shinyApp(
         maplong = state_latlong$Longitude[state_latlong$State == stateBy]
         zoom = 6
       }
-      
-      
+  
       output$map <- renderLeaflet({
         leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
           addProviderTiles(mapBy,
                            options = providerTileOptions(noWrap = TRUE)) %>%
           addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, label = ~la, data = popups.df) })
-      
-         
-
-
-      
-      
+ 
     })
     
         
@@ -532,9 +526,6 @@ shinyApp(
       contentType = 'image/gif'
       list(src="outfile.gif")
     }, deleteFile = T)})    
-    
-    
-    
   }
 )
 ```
