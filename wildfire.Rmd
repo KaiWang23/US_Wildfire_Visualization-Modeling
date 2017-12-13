@@ -396,7 +396,7 @@ shinyApp(
     tabPanel("Get Gif",
     div(
       absolutePanel(id = "control2", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+          draggable = TRUE, top = 300, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
           h3("US Wildfires explorer"),
   
@@ -518,16 +518,13 @@ shinyApp(
     )
     })
     
-    
-    
-    
-    
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
       saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
       contentType = 'image/gif'
       list(src="outfile.gif")
     }, deleteFile = T)    
+  
     observeEvent(input$go, {
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
