@@ -402,13 +402,13 @@ shinyApp(
   
           selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
           br(),
-          numericInput("Y", "Year", min = 1992, max = 2015, value = 1992),
+          sliderInput("Y", "Year", min = 1992, max = 2015, value = 1992),
           br(),
-          numericInput("M","Month", min = 1, max = 12, value = 1),
+          sliderInput("M","Month", min = 1, max = 12, value = 1),
           br(),
           actionButton("go", "Get Gif!")
           ), 
-       withSpinner(imageOutput('animated_image'), type=5)
+       imageOutput('animated_image')
       )
     ),
     conditionalPanel("false", icon("crosshair"))
