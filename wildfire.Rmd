@@ -366,8 +366,6 @@ getState <- function(pointsDF) {
     stateNames[indices]
 }
 
-#function to get country name by lat and long
-#
 ```
 
 Part(3):Define the interface  of the shiny app and realize their functions:
@@ -516,8 +514,6 @@ shinyApp(
                     
           h3("Predict New Fire"),
           selectInput("state.new", "State Abbreviation:", choices = state.abb, selected = state.abb[33]),
-          br(),
-          numericInput("year.new","Year:",min = 2016,max = 2050,value = 2016),
           br(),
           sliderInput("month.new","Month:", min = 1, max = 12, value = 1),
           br(),
