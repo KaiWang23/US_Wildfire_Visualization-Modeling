@@ -33,6 +33,11 @@ library(scales)
 library(lattice)
 ```
 
+Write up:
+
+1. Through url to download the dataset, the data contains 1.88 million wildfires that occurred in the United States from 1992 to 2015. The data is 0.9GB. So we save it in the space avoiding rerun the data.
+
+2. Then we generate the dataset for ploting only with fire size, longitude, latitude, discover time, and continue time. This dataset we only use complete cases for plotting. 
 
 ```{r save fires/firesplot}
 #download dataset and remove zip file afterwards
@@ -98,14 +103,18 @@ allday <- allday %>% arrange(DISCOVERY_DATEymd)
 
 
 ```{r load data}
-load("~/STA523/Project-peppa_pig/fires.RData")
-load("~/STA523/Project-peppa_pig/firesplot.RData")
-load("~/STA523/Project-peppa_pig/allday.RData")
+load("fires.RData")
+load("firesplot.RData")
+load("allday.RData")
 ```
+
+Write up:
+
+1. Here we write plotfire function to plot gif. We use savegif function to impletement the 
+
 
 ```{r plot function}
 state_map <- map_data('state')
-
 
 plotfire <- function(State, year, month){
   
@@ -373,7 +382,9 @@ shinyApp(
   
     tabPanel("Data explorer",
     div(
-      absolutePanel(id = "control1", class = "panel panel-default", fixed = TRUE,
+      tags$head(includeCSS("styles.css")),
+       withSpinner(leafletOutput('interactive_map'), type=1),
+      absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
   
@@ -388,14 +399,15 @@ shinyApp(
           sliderInput("d.of.w", "Day of Week", min =1, max=7,value=1),
           br(),
           actionButton("go2", "Predict Cause!")
-          ), 
-       withSpinner(leafletOutput('interactive_map'), type=1)
+          )
       )
     ),
     
     tabPanel("Get Gif",
     div(
-      absolutePanel(id = "control2", class = "panel panel-default", fixed = TRUE,
+      tags$head(includeCSS("styles.css")),
+      withSpinner(imageOutput('animated_image'), type=5),
+      absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 300, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
           h3("US Wildfires explorer"),
@@ -407,8 +419,8 @@ shinyApp(
           sliderInput("M","Month", min = 1, max = 12, value = 1),
           br(),
           actionButton("go", "Get Gif!")
-          ), 
-       imageOutput('animated_image')
+          )
+       
       )
     ),
     conditionalPanel("false", icon("crosshair"))
@@ -511,13 +523,6 @@ shinyApp(
       }
     )
     })
-    
-    output$animated_image <- renderImage({
-      outfile <- tempfile(fileext='.gif')
-      saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
-      contentType = 'image/gif'
-      list(src="outfile.gif")
-    }, deleteFile = T)    
   
     observeEvent(input$go, {
     output$animated_image <- renderImage({
