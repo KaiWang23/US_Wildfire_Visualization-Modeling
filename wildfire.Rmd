@@ -2,9 +2,8 @@
 title: "Wildfire"
 author: "Peppa pig"
 date: "12/10/2017"
-output:
-  html_document:
-    df_print: paged
+output: html_document
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -109,9 +108,9 @@ allday <- allday %>% arrange(DISCOVERY_DATEymd)
 
 
 ```{r load data}
-load("fires.RData")
-load("firesplot.RData")
-load("allday.RData")
+#load("fires.RData")
+#load("firesplot.RData")
+#load("allday.RData")
 ```
 
 Write up:
