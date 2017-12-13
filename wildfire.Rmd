@@ -335,6 +335,29 @@ pred=predict(rfmodel,x.train.new)
 
 return(pred)
 }
+
+#function to get state name by lat and long
+#Code taken from SO
+#http://stackoverflow.com/questions/8751497/latitude-longitude-coordinates-to-state-code-in-r/8751965#8751965
+getState <- function(pointsDF) {
+    # Prepare SpatialPolygons object with one SpatialPolygon
+    # per state (plus DC, minus HI & AK)
+    states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
+    IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
+    states_sp <- map2SpatialPolygons(states, IDs=IDs,
+                     proj4string=CRS("+proj=longlat +datum=WGS84 "))
+
+    # Convert pointsDF to a SpatialPoints object 
+    pointsSP <- SpatialPoints(pointsDF, 
+                    proj4string=CRS("+proj=longlat +datum=WGS84 "))
+
+    # Use 'over' to get _indices_ of the Polygons object containing each point 
+    indices <- over(pointsSP, states_sp)
+
+    # Return the state names of the Polygons object containing each point
+    stateNames <- sapply(states_sp@polygons, function(x) x@ID)
+    stateNames[indices]
+}
 ```
 
 Write up:
@@ -496,11 +519,8 @@ shinyApp(
           sliderInput("d.of.w.new", "Day of Week:", min =1, max=7,value=1),
           br(),
           numericInput("lat.new","Latitude:",min = 0,max = 90,value = 0),
-          br(),
           numericInput("long.new","Longitude:",min=-180,max = 180,value = 0),
-          br(),
           numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 0),
-          br(),
           actionButton("go.new", "Predict New Fire!"),
           
           textOutput("cause.new")
@@ -637,12 +657,39 @@ shinyApp(
     })
     
     
-    observeEvent(input$go.new,
+observeEvent(input$go.new,
                  {
+                   df=data.frame(isolate(as.numeric(input$long.new)),isolate(as.numeric(input$lat.new)))
+                   state_name=getState(df)
+                   state_name=toTitleCase(state_name)
+                   state_name_abb=as.character(state.abb[match(state_name,state.name)])
+                   if(state_name_abb==as.character(isolate(input$state.new))){
+                      preds= as.character(getNew(isolate(input$state.new),isolate(as.numeric(input$year.new)),isolate(as.numeric(input$month.new)),isolate(as.numeric(input$d.of.w.new)),isolate(as.numeric(input$lat.new)),isolate(as.numeric(input$long.new)),isolate(as.numeric(input$fire.size.new))))
+
                    output$cause.new=renderText(
-                     as.character(getNew(isolate(input$state.new),isolate(as.numeric(input$year.new)),isolate(as.numeric(input$month.new)),isolate(as.numeric(input$d.of.w.new)),isolate(as.numeric(input$lat.new)),isolate(as.numeric(input$long.new)),isolate(as.numeric(input$fire.size.new)))
+                     preds
+                    )
+                   output$interactive_map =renderLeaflet(
+      {
+            leaflet() %>% 
+            #setView(lat = -0.900653, lng = -78.467834, zoom = 7) %>% 
+            addTiles() %>%
+            addMarkers(
+              isolate(as.numeric(input$long.new)),
+              isolate(as.numeric(input$lat.new)),
+              popup = paste(sep = "<br/>",
+              "Predicted Cause",
+              preds))
+      }
+    )
+                   
+                   }else{
+                     preds="warning: longitude, longditude and state not match"
+                    output$cause.new=renderText(
+                     preds
+                    )
                      
-                   ))
+                   }
                  }
     )
       
