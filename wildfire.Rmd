@@ -31,6 +31,10 @@ library(shinycssloaders)
 library(RColorBrewer)
 library(scales)
 library(lattice)
+library(sp)
+library(maps)
+library(maptools)
+library(tools)
 ```
 
 Write up:
@@ -161,7 +165,7 @@ plotfire <- function(State, year, month){
 }
 
 #model for prediction
-getTree=function(state.name,year,month,day_of_week,open=T,new=F){
+getTree=function(state.name,year,month,day_of_week,open=T){
   
   if(open){
     fires.state=fires[fires$STATE==state.name,]
@@ -171,9 +175,9 @@ getTree=function(state.name,year,month,day_of_week,open=T,new=F){
       mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
       mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
       mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
-      mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+      mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
                                        "Accidental"))))%>%
       filter(YEAR==year)%>%
       filter(MONTH==month)%>%
@@ -245,9 +249,9 @@ x.train.new=fires.state%>%
   mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
   mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
   mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
-  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "nature",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "other",
+  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
                                        "Accidental"))))%>%
   select(-c(DISCOVERY_DATE,DATE))
   
@@ -275,8 +279,8 @@ getNew=function(state.name,year,month,day_of_week,latitude,longitude,firesize){
   if(!is.null(state.prev) && state.name==state.prev){
     rfmodel=model.prev
     fires.state=dataset.prev
-  }
-  else{
+    x.train=train.prev
+  }else{
     fires.state=fires[fires$STATE==state.name,]
 
     if(nrow(fires.state)<1000){
@@ -324,6 +328,7 @@ rfmodel <- train(x = x.train,
 model.prev<<-rfmodel
 state.prev<<-state.name
 dataset.prev<<-fires.state
+train.prev<<-x.train
 }
 
 x.train.new=data.frame(MONTH=as.factor(month),LATITUDE=as.numeric(latitude),LONGITUDE=as.numeric(longitude),FIRE_SIZE=as.numeric(firesize),DAY_OF_WEEK=as.factor(day_of_week))
@@ -444,7 +449,7 @@ state_latlong = read.csv("state_latlong.csv", stringsAsFactors = F, header = T)
 state.prev=NULL
 model.prev=NULL
 dataset.prev=NULL
-
+train.prev=NULL
 
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
@@ -493,7 +498,7 @@ shinyApp(
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
   
-          h3("US Wildfires explorer"),
+          h3("Predict Old Fire"),
   
           selectInput("State", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
           br(),
@@ -509,7 +514,7 @@ shinyApp(
           draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
           width = 400, height = "auto",
                     
-          h3("Predict New"),
+          h3("Predict New Fire"),
           selectInput("state.new", "State Abbreviation:", choices = state.abb, selected = state.abb[33]),
           br(),
           numericInput("year.new","Year:",min = 2016,max = 2050,value = 2016),
@@ -518,10 +523,10 @@ shinyApp(
           br(),
           sliderInput("d.of.w.new", "Day of Week:", min =1, max=7,value=1),
           br(),
-          numericInput("lat.new","Latitude:",min = 0,max = 90,value = 0),
-          numericInput("long.new","Longitude:",min=-180,max = 180,value = 0),
-          numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 0),
-          actionButton("go.new", "Predict New Fire!"),
+          numericInput("lat.new","Latitude:",min = 0,max = 90,value = 35.6),
+          numericInput("long.new","Longitude:",min=-180,max = 180,value = -80),
+          numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 1),
+          actionButton("go.new", "Predict Cause!"),
           
           textOutput("cause.new")
         )
