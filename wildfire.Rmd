@@ -2,7 +2,9 @@
 title: "Wildfire"
 author: "Peppa pig"
 date: "12/10/2017"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -48,6 +50,9 @@ dbDisconnect(conn)
 
 print(object.size(fires), units = 'Gb')
 
+fires = fires %>% 
+  select(FOD_ID, FIRE_YEAR, DISCOVERY_DATE, DISCOVERY_DOY, DISCOVERY_TIME, STAT_CAUSE_CODE, STAT_CAUSE_DESCR, CONT_DATE, CONT_DOY, CONT_TIME, FIRE_SIZE, FIRE_SIZE_CLASS, LATITUDE, LONGITUDE, OWNER_CODE, OWNER_DESCR, STATE, FIRE_NAME, SOURCE_REPORTING_UNIT_NAME, STAT_CAUSE_DESCR)
+
 fires <- fires %>% arrange(DISCOVERY_DATE, CONT_DATE)
 
 # Add codes for DC and Puerto Rico to the default state lists
@@ -63,17 +68,17 @@ fires$DISCOVERY_DATEymd <- as.Date(fires$DISCOVERY_DATE - 2458014.5, origin = '2
 
 firesplot <- fires %>% select(FIRE_SIZE, LATITUDE, LONGITUDE, CONT_DATEymd, DISCOVERY_DATEymd, STATE, region) %>% na.omit() %>% data.frame()
 
-save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
+#save(fires, file = "~/STA523/Project-peppa_pig/fires.RData")
 
 firesplot <- data.frame(firesplot)
 
-save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
+#save(firesplot, file = "~/STA523/Project-peppa_pig/firesplot.RData")
 
 # Get the us state map data
 state_map <- map_data('state')
 
 days <- apply(firesplot, 1, function(x){
-  if(x[4]!=x[5]){
+  if(x[4] != x[5] ){
     return(seq(as.Date(x[5]), as.Date(x[4]), by="days"))
   }
 })
@@ -88,7 +93,7 @@ allday <- rbind(newdataframe[,-4], firesplot[-notoneday,-4])
 
 allday <- allday %>% arrange(DISCOVERY_DATEymd) 
 
-save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
+#save(allday, file = "~/STA523/Project-peppa_pig/allday.RData")
 ```
 
 
@@ -193,8 +198,6 @@ dev.off()
 
 
 ```{r plot function}
-state.abb <- append(state.abb, c("DC", "PR"))
-state.name <- append(state.name, c("District of Columbia", "Puerto Rico"))
 state_map <- map_data('state')
 
 
@@ -464,9 +467,7 @@ shinyApp(
   
     tabPanel("Data explorer",
     div(
-    
-      
-      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+      absolutePanel(id = "control1", class = "panel panel-default", fixed = TRUE,
           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
   
@@ -488,12 +489,9 @@ shinyApp(
     
     tabPanel("Get Gif",
     div(
-    
-      
-      absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+      absolutePanel(id = "control2", class = "panel panel-default", fixed = TRUE,
+          draggable = TRUE, top = 300, left = "auto", right = 10, bottom = "auto",
           width = 330, height = "auto",
-  
           h3("US Wildfires explorer"),
   
           selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
@@ -504,12 +502,9 @@ shinyApp(
           br(),
           actionButton("go", "Get Gif!")
           ), 
-       withSpinner(imageOutput('animated_image'), type=5)
+       imageOutput('animated_image')
       )
     ),
-    
-    
-    
     conditionalPanel("false", icon("crosshair"))
   )
   ,
@@ -563,19 +558,13 @@ shinyApp(
         maplong = state_latlong$Longitude[state_latlong$State == stateBy]
         zoom = 6
       }
-      
-      
+  
       output$map <- renderLeaflet({
         leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
           addProviderTiles(mapBy,
                            options = providerTileOptions(noWrap = TRUE)) %>%
           addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, label = ~la, data = popups.df) })
-      
-         
-
-
-      
-      
+ 
     })
     
         
@@ -617,16 +606,13 @@ shinyApp(
     )
     })
     
-    
-    
-    
-    
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
       saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
       contentType = 'image/gif'
       list(src="outfile.gif")
     }, deleteFile = T)    
+  
     observeEvent(input$go, {
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
@@ -634,9 +620,14 @@ shinyApp(
       contentType = 'image/gif'
       list(src="outfile.gif")
     }, deleteFile = T)})    
-    
-    
-    
   }
 )
 ```
+
+Reference:
+
+1.Leaflet: https://shiny.rstudio.com/gallery/superzip-example.html 
+
+2.Some ggplots: https://www.kaggle.com/captcalculator/wildfire-exploratory-analysis
+
+3.Save gif: https://robjhyndman.com/hyndsight/animations/
