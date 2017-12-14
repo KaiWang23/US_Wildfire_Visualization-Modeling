@@ -46,7 +46,9 @@ Write up:
 
 ```{r save fires/firesplot}
 #download dataset and remove zip file afterwards
-download.file(url = "https://storage.googleapis.com/kaggle-datasets/2478/4139/FPA_FOD_20170508.sqlite.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1513189819&Signature=myp%2BB6XkMNUOfxgOsXoJbjzfSigsiX1Ds9wa8datVuulb7qk8hr5vaDh6S%2Fim9%2FygU7V%2Fpgk%2Fw%2FiPNduZsS7%2F6BUu7Lv3TSfIhPib%2B%2F0y4iCpoiii2dc1T%2B%2F2e4qY0E74yaPRgVKDQcjj1CL%2F0gF55JLr0QdkwoY5qnSt09w%2B%2B%2Bg8ZVn5jvPslhvxZDUcDlDVZdB0O%2BSdrZyu%2Flh8prBw2v2TZAzhylhok0WfbqU4MGLnGqLDa89Nf%2Fhtk%2Ba3KzadSLm04Eiv7jIh2%2FTpaYfqLPjelAHcj1KQrqjs1EK9DjLHuIPpXz2Y%2BnHM3ZLnM2iGnTRMnp5LtHd%2BQNs9GscrA%3D%3D", destfile = "data.zip")
+download.file(url = "https://storage.googleapis.com/kaggle-datasets/2478/4139/188-million-us-wildfires.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1513473608&Signature=m3KB2WQROuzquBvOvQ1EzwB%2FwBy7u1ZNc2Zw50gBYcR0dV%2BQjbXZSydCCquTclMVX3GbscXWdXNnFew8NOVbS35D6WrK6%2F3CM7uJ0u5CdRvfZD0VrhTirruEKTnKOYPDvY%2BA%2Bpe6FtjVj6I8menJDG0WDJrRprUVfTqYLRZzwDc2CMaDq7bGRgaWpEP7%2FVtQObGMvzZmK4KitCP3T2RdgbbT9RAU%2B7TlxlV6Rwr21AZtjy8N6HugbGuGWoHG3Hh2Pr%2B0WblkPiZlPtpXcFhuL7VAWqdSuXNSd6YvopNaRCIGwu2YbVTiIUfcoeLr03y3ErvcabvAFU7YipKAVcQ91A%3D%3D", destfile = "data.zip")
+
+
 
 unzip("data.zip")
 file.remove("data.zip")
