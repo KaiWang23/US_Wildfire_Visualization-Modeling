@@ -456,102 +456,102 @@ train.prev=NULL
 
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
-    #first tab panel
-    tabPanel("Interactive map",
-      div(class="outer",
-  
-        tags$head(includeCSS("styles.css")),
-        leafletOutput("map", width="100%", height="100%"),
-  
-        absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
-          width = 330, height = "auto",
-  
-          h3("US Wildfires explorer"),
-  
-          selectInput("basemap", "Base Map", maps),
-          selectInput("state", "States", states, selected = "All"),
-          dateInput("datefrom", "Select the Start Date", value = "2015-12-15", min = "1992-01-01", max = "2015-12-31"),
-          dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31"),
-          actionButton("button", "Search")
-        ),
-        absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
-          width = 400, height = "auto",
-                    
-          h3("Plot Explorer"),
-          
-          plotOutput("plot1", height = 200),
-          plotOutput("plot2", height = 300)
-        ),
-  
-        tags$div(id="cite",
-          tags$em('Short, Karen C. 2017. Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508]. 4th Edition. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2013-0009.4')
-        )
-      )
-    ),
-  
-    #second tab panel
-    tabPanel("Predict Causes",
-    div(class="outer",
-  
-      tags$head(includeCSS("styles_new.css")),
-       leafletOutput('interactive_map',width = "100%",height = "100%"),
-      absolutePanel(id = "control_new", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
-          width = 330, height = "auto",
-  
-          h3("Predict Old Fire"),
-  
-          selectInput("State", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
-          sliderInput("year", "Year", min = 1992, max = 2015, value = 1992),
-          sliderInput("month","Month", min = 1, max = 12, value = 1),
-          sliderInput("d.of.w", "Day of Week", min =1, max=7,value=1),
-          actionButton("go2", "Predict Cause!")
-          ),
-      absolutePanel(id = "predict_new", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
-          width = 400, height = "auto",
-                    
-          h3("Predict New Fire"),
-          selectInput("state.new", "State Abbreviation:", choices = state.abb, selected = state.abb[33]),
-          br(),
-          sliderInput("month.new","Month:", min = 1, max = 12, value = 1),
-          br(),
-          sliderInput("d.of.w.new", "Day of Week:", min =1, max=7,value=1),
-          br(),
-          numericInput("lat.new","Latitude:",min = 0,max = 90,value = 35.6),
-          numericInput("long.new","Longitude:",min=-180,max = 180,value = -80),
-          numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 1),
-          actionButton("go.new", "Predict Cause!"),
-          
-          textOutput("cause.new")
-        )
-      )
-    ),
-    
-    #third tab panel
-    tabPanel("Get Gif",
-    div(
-      tags$head(includeCSS("styles.css")),
-      withSpinner(imageOutput('animated_image'), type=5),
-      absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
-          draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
-          width = 400, height = "auto",
-          h3("US Wildfires explorer"),
-  
-          selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
-          br(),
-          sliderInput("Y", "Year", min = 1992, max = 2015, value = 1992),
-          br(),
-          sliderInput("M","Month", min = 1, max = 12, value = 1),
-          br(),
-          actionButton("go", "Get Gif!")
-          )
-       
-      )
-    ),
-    conditionalPanel("false", icon("crosshair"))
+                  #first tab panel
+                  tabPanel("Interactive map",
+                           div(class="outer",
+                               
+                               tags$head(includeCSS("styles.css")),
+                               leafletOutput("map", width="100%", height="100%"),
+                               
+                               absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                             draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+                                             width = 330, height = "auto",
+                                             
+                                             h3("US Wildfires explorer"),
+                                             
+                                             selectInput("basemap", "Base Map", maps),
+                                             selectInput("state", "States", states, selected = "All"),
+                                             dateInput("datefrom", "Select the Start Date", value = "2015-12-15", min = "1992-01-01", max = "2015-12-31"),
+                                             dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31"),
+                                             actionButton("button", "Search")
+                               ),
+                               absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
+                                             draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
+                                             width = 400, height = "auto",
+                                             
+                                             h3("Plot Explorer"),
+                                             
+                                             plotOutput("plot1", height = 200),
+                                             plotOutput("plot2", height = 300)
+                               ),
+                               
+                               tags$div(id="cite",
+                                        tags$em('Short, Karen C. 2017. Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508]. 4th Edition. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2013-0009.4')
+                               )
+                           )
+                  ),
+                  
+                  #second tab panel
+                  tabPanel("Predict Causes",
+                           div(class="outer",
+                               
+                               tags$head(includeCSS("styles_new.css")),
+                               leafletOutput('interactive_map',width = "100%",height = "100%"),
+                               absolutePanel(id = "control_new", class = "panel panel-default", fixed = TRUE,
+                                             draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+                                             width = 330, height = "auto",
+                                             
+                                             h3("Predict Old Fire"),
+                                             
+                                             selectInput("State", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
+                                             sliderInput("year", "Year", min = 1992, max = 2015, value = 1992),
+                                             sliderInput("month","Month", min = 1, max = 12, value = 1),
+                                             sliderInput("d.of.w", "Day of Week", min =1, max=7,value=1),
+                                             actionButton("go2", "Predict Cause!")
+                               ),
+                               absolutePanel(id = "predict_new", class = "panel panel-default", fixed = TRUE,
+                                             draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
+                                             width = 400, height = "auto",
+                                             
+                                             h3("Predict New Fire"),
+                                             selectInput("state.new", "State Abbreviation:", choices = state.abb, selected = state.abb[33]),
+                                             br(),
+                                             sliderInput("month.new","Month:", min = 1, max = 12, value = 1),
+                                             br(),
+                                             sliderInput("d.of.w.new", "Day of Week:", min =1, max=7,value=1),
+                                             br(),
+                                             numericInput("lat.new","Latitude:",min = 0,max = 90,value = 35.6),
+                                             numericInput("long.new","Longitude:",min=-180,max = 180,value = -80),
+                                             numericInput("fire.size.new","Fire Size:",min = 0,max = 10,value = 1),
+                                             actionButton("go.new", "Predict Cause!"),
+                                             
+                                             textOutput("cause.new")
+                               )
+                           )
+                  ),
+                  
+                  #third tab panel
+                  tabPanel("Get Gif",
+                           div(
+                             tags$head(includeCSS("styles.css")),
+                             withSpinner(imageOutput('animated_image'), type=5),
+                             absolutePanel(id = "control", class = "panel panel-default", fixed = TRUE,
+                                           draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
+                                           width = 400, height = "auto",
+                                           h3("US Wildfires explorer"),
+                                           
+                                           selectInput("S", "State Abbreviation", choices = state.abb, selected = state.abb[33]),
+                                           br(),
+                                           sliderInput("Y", "Year", min = 1992, max = 2015, value = 1992),
+                                           br(),
+                                           sliderInput("M","Month", min = 1, max = 12, value = 1),
+                                           br(),
+                                           actionButton("go", "Get Gif!")
+                             )
+                             
+                           )
+                  ),
+                  conditionalPanel("false", icon("crosshair"))
   )
   ,
   
@@ -605,40 +605,40 @@ shinyApp(
         maplong = state_latlong$Longitude[state_latlong$State == stateBy]
         zoom = 6
       }
-  
+      
       output$map <- renderLeaflet({
         leaflet() %>% setView(lng = maplong, lat = maplat, zoom = zoom) %>%
           addProviderTiles(mapBy,
                            options = providerTileOptions(noWrap = TRUE)) %>%
           addMarkers(lng = ~LONGITUDE, lat = ~LATITUDE, popup = ~pop, label = ~la, data = popups.df) })
- 
+      
     })
     
-        
+    
     output$interactive_map= renderLeaflet({
-        fires.aux=getTree("NC","1992",1,1)
-        fires.aux %>%
-            leaflet() %>% 
-            addTiles() %>%
-            addMarkers(
-              ~LONGITUDE,
-              ~LATITUDE,
-              popup = ~paste(sep = "<br/>",
-              paste("Fire Name:",FIRE_NAME),
-              paste("Fire Size:",FIRE_SIZE,"acres"),
-              paste("Actual Cause:",CAUSE_RECODE),
-              paste("Actual Cause In Specific:", STAT_CAUSE_DESCR)))
-      })
+      fires.aux=getTree("NC","1992",1,1)
+      fires.aux %>%
+        leaflet() %>% 
+        addTiles() %>%
+        addMarkers(
+          ~LONGITUDE,
+          ~LATITUDE,
+          popup = ~paste(sep = "<br/>",
+                         paste("Fire Name:",FIRE_NAME),
+                         paste("Fire Size:",FIRE_SIZE,"acres"),
+                         paste("Actual Cause:",CAUSE_RECODE),
+                         paste("Actual Cause In Specific:", STAT_CAUSE_DESCR)))
+    })
     
     
     
     observeEvent(input$go2, {
-    output$interactive_map =renderLeaflet(
-      {
-        fires.aux=getTree(isolate(input$State),isolate(as.numeric(input$year)),isolate(as.numeric(input$month)),isolate(as.numeric(input$d.of.w)),open = FALSE)
-        
-       
-        fires.aux %>%
+      output$interactive_map =renderLeaflet(
+        {
+          fires.aux=getTree(isolate(input$State),isolate(as.numeric(input$year)),isolate(as.numeric(input$month)),isolate(as.numeric(input$d.of.w)),open = FALSE)
+          
+          
+          fires.aux %>%
             leaflet() %>% 
             #setView(lat = -0.900653, lng = -78.467834, zoom = 7) %>% 
             addTiles() %>%
@@ -646,55 +646,55 @@ shinyApp(
               ~LONGITUDE,
               ~LATITUDE,
               popup = ~paste(sep = "<br/>",
-              paste("Fire Name:",FIRE_NAME),
-              paste("Fire Size:",FIRE_SIZE,"acres"),
-              paste("Predicted Cause:",CAUSE),
-              paste("Actual Cause:",CAUSE_RECODE),
-              paste("Actual Cause In Specific:", STAT_CAUSE_DESCR))
-
+                             paste("Fire Name:",FIRE_NAME),
+                             paste("Fire Size:",FIRE_SIZE,"acres"),
+                             paste("Predicted Cause:",CAUSE),
+                             paste("Actual Cause:",CAUSE_RECODE),
+                             paste("Actual Cause In Specific:", STAT_CAUSE_DESCR))
+              
             )
-
-      }
-    )
+          
+        }
+      )
     })
     
     
-observeEvent(input$go.new,
+    observeEvent(input$go.new,
                  {
                    df=data.frame(isolate(as.numeric(input$long.new)),isolate(as.numeric(input$lat.new)))
                    state_name=getState(df)
                    state_name=toTitleCase(state_name)
                    state_name_abb=as.character(state.abb[match(state_name,state.name)])
                    if(state_name_abb==as.character(isolate(input$state.new))){
-                      preds= as.character(getNew(isolate(input$state.new),isolate(as.numeric(input$year.new)),isolate(as.numeric(input$month.new)),isolate(as.numeric(input$d.of.w.new)),isolate(as.numeric(input$lat.new)),isolate(as.numeric(input$long.new)),isolate(as.numeric(input$fire.size.new))))
-
-                   output$cause.new=renderText(
-                     preds
-                    )
-                   output$interactive_map =renderLeaflet(
-      {
-            leaflet() %>% 
-            #setView(lat = -0.900653, lng = -78.467834, zoom = 7) %>% 
-            addTiles() %>%
-            addMarkers(
-              isolate(as.numeric(input$long.new)),
-              isolate(as.numeric(input$lat.new)),
-              popup = paste(sep = "<br/>",
-              "Predicted Cause",
-              preds))
-      }
-    )
-                   
+                     preds= as.character(getNew(isolate(input$state.new),isolate(as.numeric(input$year.new)),isolate(as.numeric(input$month.new)),isolate(as.numeric(input$d.of.w.new)),isolate(as.numeric(input$lat.new)),isolate(as.numeric(input$long.new)),isolate(as.numeric(input$fire.size.new))))
+                     
+                     output$cause.new=renderText(
+                       preds
+                     )
+                     output$interactive_map =renderLeaflet(
+                       {
+                         leaflet() %>% 
+                           #setView(lat = -0.900653, lng = -78.467834, zoom = 7) %>% 
+                           addTiles() %>%
+                           addMarkers(
+                             isolate(as.numeric(input$long.new)),
+                             isolate(as.numeric(input$lat.new)),
+                             popup = paste(sep = "<br/>",
+                                           "Predicted Cause",
+                                           preds))
+                       }
+                     )
+                     
                    }else{
                      preds="warning: longitude, longditude and state not match"
-                    output$cause.new=renderText(
-                     preds
-                    )
+                     output$cause.new=renderText(
+                       preds
+                     )
                      
                    }
                  }
     )
-      
+    
     output$animated_image <- renderImage({
       outfile <- tempfile(fileext='.gif')
       saveGIF(plotfire("NC", "1992", "1"), movie.name = "outfile.gif")
@@ -702,14 +702,14 @@ observeEvent(input$go.new,
       list(src="outfile.gif")
     }, deleteFile = T)  
     
-  
+    
     observeEvent(input$go, {
-    output$animated_image <- renderImage({
-      outfile <- tempfile(fileext='.gif')
-      saveGIF(plotfire(isolate(input$S), isolate(input$Y), isolate(input$M)), movie.name = "outfile.gif")
-      contentType = 'image/gif'
-      list(src="outfile.gif")
-    }, deleteFile = T)})    
+      output$animated_image <- renderImage({
+        outfile <- tempfile(fileext='.gif')
+        saveGIF(plotfire(isolate(input$S), isolate(input$Y), isolate(input$M)), movie.name = "outfile.gif")
+        contentType = 'image/gif'
+        list(src="outfile.gif")
+      }, deleteFile = T)})    
   }
 )
 ```
