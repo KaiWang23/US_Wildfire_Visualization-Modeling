@@ -1,6 +1,6 @@
 ---
-title: "Wildfire"
-author: "Peppa pig"
+title: "Visualization of U.S. Wildfires and Prediction their Causes"
+author: "Peppa pig (Hu, X; Wang, K; Zhang, S; Zhu, Y)"
 date: "12/10/2017"
 output: html_document
 runtime: shiny
@@ -38,15 +38,15 @@ library(tools)
 ```
 
 
-Project Peppa Pig: Visualization of U.S. Wildfires and Prediction their Causes  
+## Project Peppa Pig: Visualization of U.S. Wildfires and Prediction their Causes  
 
-Abstract: Wildfires are common problems for Americans, especially for residents in California and other southern areas with relatively dry weather and considerably large amounts of forest areas. In our project, we tried to understand the distribution of wildfires by visualizing the wildfires happening within a certain area and a certain range of time. Besides the distributions, we are also interested in the different causes of wildfires such as lighting, debris burning, wrong usage of equipment and etc... Knowing the causes of wildfires would help us not only slow down the expansion of wildfires more effectively but also prevent future possible wildfires with similar causes. With these motivations, we found the data of 1.88 million US wildfires on Kaggle(link:https://www.kaggle.com/rtatman/188-million-us-wildfires) and developed a shiny app to achieve our goals. As described in the "context" of the overview page, "this data publication contains a spatial database of wildfires that occurred in the United States from 1992 to 2015". With the data, we therefore constructed a shiny app with an appropriate interface where users can specify date, state, location information etc... and get their desired results: visualization and prediction. We spit the shiny app into three parts corresponding to different functions: (i) display the wildfires happening in a certain state and a certain range of time on a map; (ii) predict the causes of new and old wildfires by a model; (iii) visualize the development or occurrence of wildfires. And in order to prepare for the construction of the shiny app, we divided our r code into three parts:(1)achieve, clean and save necessary data files; (2)construct functions which are embedded in shiny app; (3)define the interface  of the shiny app and realize their functions.
-
-
+*Abstract*: Wildfires are common problems for Americans, especially for residents in California and other southern areas with relatively dry weather and considerably large amounts of forest areas. In our project, we tried to understand the distribution of wildfires by visualizing the wildfires happening within a certain area and a certain range of time. Besides the distributions, we are also interested in the different causes of wildfires such as lighting, debris burning, wrong usage of equipment and etc... Knowing the causes of wildfires would help us not only slow down the expansion of wildfires more effectively but also prevent future possible wildfires with similar causes. With these motivations, we found the data of 1.88 million US wildfires on Kaggle(link:https://www.kaggle.com/rtatman/188-million-us-wildfires) and developed a shiny app to achieve our goals. As described in the "context" of the overview page, "this data publication contains a spatial database of wildfires that occurred in the United States from 1992 to 2015". With the data, we therefore constructed a shiny app with an appropriate interface where users can specify date, state, location information etc... and get their desired results: visualization and prediction. We spit the shiny app into three parts corresponding to different functions: (i) display the wildfires happening in a certain state and a certain range of time on a map; (ii) predict the causes of new and old wildfires by a model; (iii) visualize the development or occurrence of wildfires. And in order to prepare for the construction of the shiny app, we divided our r code into three parts:(1)achieve, clean and save necessary data files; (2)construct functions which are embedded in shiny app; (3)define the interface  of the shiny app and realize their functions.
 
 
 
-Part(1):Achieve, clean and save necessary data files:  
+
+
+### Part(1):Achieve, clean and save necessary data files:  
 
 1. Through url to download the sql, then we use SQlite to get out our data. The data contains 1880465rows and 39 variables. This datafrome includes wildfires that occurred in the United States from 1992 to 2015. The data is 0.9GB. So we save it in the space avoiding rerun the data.
 
@@ -125,7 +125,7 @@ allday <- allday %>% arrange(DISCOVERY_DATEymd)
 
 
 
-Part(2):Construct functions which are embedded in shiny app:
+### Part(2):Construct functions which are embedded in shiny app:
 
 1. Here we write a plotfire function to plot gif. We use savegif function to implement the plot function. With the initial plotdata, we want to show the animation of monthly wildfires of a specified state, year, and month. It needs a for-loop function to plot daily plots and saveGIFfunction to generate GIF. So it needs quite much time.
 
@@ -237,7 +237,6 @@ getTree=function(state.name,year,month,day_of_week,open=T){
     
     x.train=fires.sample[,predictors]
     y.train=fires.sample$CAUSE_RECODE
-    
     
     #random forest
     tr.control=trainControl(method="cv",number=3)
@@ -369,7 +368,7 @@ getState <- function(pointsDF) {
 
 ```
 
-Part(3):Define the interface  of the shiny app and realize their functions:
+### Part(3):Define the interface  of the shiny app and realize their functions:
 
 We use navbarPage and leaflet to build a neat shiny. We have three total tabs, then we place each function in each tab. The first tab is showing the total map of fires. When we put the mouth icon on one point, it will turn out the discover date, unique id, fire size, fire class and cause. On the left panel, it will show the corresponding fire causes and fire sizes by date.
 
@@ -723,7 +722,7 @@ shinyApp(
 )
 ```
 
-Reference:
+### Reference:
 
 1.Dataset: Short, Karen C. 2017. Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508]. 4th Edition. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2013-0009.4
 
