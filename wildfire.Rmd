@@ -301,7 +301,7 @@ getNew=function(state.name,year,month,day_of_week,latitude,longitude,firesize){
       sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
       fires.sample=fires.state[sampling.index,]
     }
-    
+
     #select the variables we would like to use and tansform them into appropriate format
     fires.sample=fires.sample%>%
       select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
@@ -381,6 +381,7 @@ The last tab contains a gif of the wildfires distribution. When we enter a state
 ```{r Shiny}
 #REFERENCE: https://shiny.rstudio.com/gallery/superzip-example.html
 
+#iterms for the selectInput of Basemap
 maps = c(
   "OpenTopoMap" = "OpenTopoMap",
   "OpenStreetMap" = "OpenStreetMap",
@@ -394,6 +395,7 @@ maps = c(
   "CartoDB.Positron" = "CartoDB.Positron"
 )
 
+#iterms for the selectInput of State
 states = c(
   "All States" = "All",
   "Alabama" =	"AL",
@@ -448,6 +450,7 @@ states = c(
   "Wyoming"	= "WY"
 )
 
+#this csv is for locating the selected state
 state_latlong = read.csv("state_latlong.csv", stringsAsFactors = F, header = T)
 state.prev=NULL
 model.prev=NULL
@@ -456,6 +459,7 @@ train.prev=NULL
 
 shinyApp(
   ui = navbarPage("US Wildfires", id="nav",
+                  
                   #first tab panel
                   tabPanel("Interactive map",
                            div(class="outer",
@@ -463,6 +467,7 @@ shinyApp(
                                tags$head(includeCSS("styles.css")),
                                leafletOutput("map", width="100%", height="100%"),
                                
+                               #panel for input
                                absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
                                              draggable = TRUE, top = 60, left = "auto", right = 10, bottom = "auto",
                                              width = 330, height = "auto",
@@ -475,6 +480,8 @@ shinyApp(
                                              dateInput("dateto", "Select the End Date", value = "2015-12-31", min = "1992-01-01", max = "2015-12-31"),
                                              actionButton("button", "Search")
                                ),
+                               
+                               #panel for plots
                                absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
                                              draggable = TRUE, top = 60, left = 10, right = "auto", bottom = "auto",
                                              width = 400, height = "auto",
@@ -559,11 +566,13 @@ shinyApp(
     
     observeEvent(input$button,{
       
+      #the dataframe of the selected date and state
       fires.df = fires %>% filter((input$datefrom <= DISCOVERY_DATEymd)&(DISCOVERY_DATEymd <= input$dateto))
       if (input$state != "All"){
         fires.df = fires.df %>% filter(STATE == input$state)
       }
       
+      #the popups when click markers
       popups.df = fires.df %>% 
         mutate(pop = paste(paste0("<b> Global Unique ID:", FOD_ID,"</b>"),
                            paste0("Discovery Date: ", DISCOVERY_DATEymd),
