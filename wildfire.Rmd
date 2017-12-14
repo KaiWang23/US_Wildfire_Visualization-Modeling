@@ -139,13 +139,13 @@ plotfire <- function(State, year, month){
   
   if (is.null(month) == T){
     subset <- which(substr(allday$DISCOVERY_DATEymd,1,4) == as.character(year) & 
-                    allday$STATE == State)
+                      allday$STATE == State)
   } else {
     subset <- which(substr(allday$DISCOVERY_DATEymd,1,4) == as.character(year) & 
-                    as.numeric(substr(allday$DISCOVERY_DATEymd,6,7)) == month & 
-                    allday$STATE == State)
+                      as.numeric(substr(allday$DISCOVERY_DATEymd,6,7)) == month & 
+                      allday$STATE == State)
   }
-
+  
   plotdata <- allday[subset, ]
   npoints<- length(unique(plotdata$DISCOVERY_DATEymd))
   
@@ -153,25 +153,25 @@ plotfire <- function(State, year, month){
     stop("Safe without a wildfire within this period")
   } else {
     p0 <- plotdata %>% 
-    select(region) %>%
-    left_join(state_map, by = 'region') %>%
-    ggplot(aes(x = long, y = lat)) + 
-    geom_polygon(fill= "lightblue") + 
-    theme_map() + 
-    coord_map('albers', lat0=30, lat1=40)+ guides(fill=FALSE) +
-    ggtitle(paste0(State,sep="  ",sep='Year:', year, sep="  ", sep='Month:', month)) + 
-    theme(plot.title = element_text(hjust = 0.5))
+      select(region) %>%
+      left_join(state_map, by = 'region') %>%
+      ggplot(aes(x = long, y = lat)) + 
+      geom_polygon(fill= "lightblue") + 
+      theme_map() + 
+      coord_map('albers', lat0=30, lat1=40)+ guides(fill=FALSE) +
+      ggtitle(paste0(State,sep="  ",sep='Year:', year, sep="  ", sep='Month:', month)) + 
+      theme(plot.title = element_text(hjust = 0.5))
     
     for(i in 1:npoints){
-    date <- as.Date(plotdata[1, 4]) + i - 1
-    take_df <- plotdata[which(plotdata$DISCOVERY_DATEymd == date), ]
-    p <- p0+ geom_point(
-      aes(x=LONGITUDE, y=LATITUDE, colour=FIRE_SIZE, size=FIRE_SIZE), 
-      data=take_df, alpha=.5, na.rm = T)  + theme(legend.position="none")+
-      scale_color_gradient(low="red", high="dark red") +
-      ggtitle(date)
-    print(p)
-  }
+      date <- as.Date(plotdata[1, 4]) + i - 1
+      take_df <- plotdata[which(plotdata$DISCOVERY_DATEymd == date), ]
+      p <- p0+ geom_point(
+        aes(x=LONGITUDE, y=LATITUDE, colour=FIRE_SIZE, size=FIRE_SIZE), 
+        data=take_df, alpha=.5, na.rm = T)  + theme(legend.position="none")+
+        scale_color_gradient(low="red", high="dark red") +
+        ggtitle(date)
+      print(p)
+    }
   }
 }
 
@@ -187,9 +187,9 @@ getTree=function(state.name,year,month,day_of_week,open=T){
       mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
       mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
       mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
-                                       "Accidental"))))%>%
+                                   ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                          ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
+                                                 "Accidental"))))%>%
       filter(YEAR==year)%>%
       filter(MONTH==month)%>%
       filter(DAY_OF_WEEK==day_of_week)%>%
@@ -206,83 +206,83 @@ getTree=function(state.name,year,month,day_of_week,open=T){
   }
   else{
     fires.state=fires[fires$STATE==state.name,]
-
+    
     if(nrow(fires.state)<1000){
-     fires.sample=fires.state
+      fires.sample=fires.state
     }else{
-     p=1000/nrow(fires.state)
-     sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
-     fires.sample=fires.state[sampling.index,]
+      p=1000/nrow(fires.state)
+      sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
+      fires.sample=fires.state[sampling.index,]
     }
-
-#select the variables we would like to use and tansform them into appropriate format
-  fires.sample=fires.sample%>%
-    select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+    
+    #select the variables we would like to use and tansform them into appropriate format
+    fires.sample=fires.sample%>%
+      select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+      mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+      mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+      mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+      mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+      mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                                   ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                          ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
+                                                 "Accidental"))))%>%
+      select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
+    
+    #change classes of some variables to factor
+    factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
+    fires.sample[factornames] = lapply(fires.sample[factornames], factor)
+    
+    #create training data frame
+    predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
+    
+    x.train=fires.sample[,predictors]
+    y.train=fires.sample$CAUSE_RECODE
+    
+    
+    #random forest
+    tr.control=trainControl(method="cv",number=3)
+    
+    rfmodel <- train(x = x.train,
+                     y = y.train,
+                     method = 'rf',
+                     tuneLength = 3,
+                     ntree = 2,
+                     trControl = tr.control)
+    
+    model.prev<<-rfmodel
+    state.prev<<-state.name
+    dataset.prev<<-fires.state
+  }
+  
+  x.train.new=fires.state%>%
+    select(c(FIRE_NAME,STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
     mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
     mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
     mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
     mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
     mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
-                                       "Accidental"))))%>%
-    select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
+                                 ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                        ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
+                                               "Accidental"))))%>%
+    select(-c(DISCOVERY_DATE,DATE))
   
-#change classes of some variables to factor
-factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
-fires.sample[factornames] = lapply(fires.sample[factornames], factor)
-
-#create training data frame
-predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
-
-x.train=fires.sample[,predictors]
-y.train=fires.sample$CAUSE_RECODE
-
-
-#random forest
-tr.control=trainControl(method="cv",number=3)
-
-rfmodel <- train(x = x.train,
-                 y = y.train,
-                 method = 'rf',
-                 tuneLength = 3,
-                 ntree = 2,
-                 trControl = tr.control)
-
-model.prev<<-rfmodel
-state.prev<<-state.name
-dataset.prev<<-fires.state
-}
-
-x.train.new=fires.state%>%
-  select(c(FIRE_NAME,STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
-  mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
-  mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
-  mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
-  mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
-  mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
-                                       "Accidental"))))%>%
-  select(-c(DISCOVERY_DATE,DATE))
+  #change classes of some variables to factor
+  factornames=colnames(x.train.new)[!colnames(x.train.new) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE","FIRE_NAME","STAT_CAUSE_DESCR","CAUSE_RECODE")]
+  x.train.new[factornames] = lapply(x.train.new[factornames], factor)
   
-#change classes of some variables to factor
-factornames=colnames(x.train.new)[!colnames(x.train.new) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE","FIRE_NAME","STAT_CAUSE_DESCR","CAUSE_RECODE")]
-x.train.new[factornames] = lapply(x.train.new[factornames], factor)
-
-x.train.new=x.train.new%>%
-  filter(YEAR==year)%>%
-  filter(MONTH==month)%>%
-  filter(DAY_OF_WEEK==day_of_week)
-
-preds=predict(rfmodel,x.train.new)
-
-df.return=x.train.new%>%
-  select(LONGITUDE,LATITUDE,FIRE_SIZE,FIRE_NAME,STAT_CAUSE_DESCR,CAUSE_RECODE)%>%
-  mutate(CAUSE=preds)
-
-return(df.return)
-
+  x.train.new=x.train.new%>%
+    filter(YEAR==year)%>%
+    filter(MONTH==month)%>%
+    filter(DAY_OF_WEEK==day_of_week)
+  
+  preds=predict(rfmodel,x.train.new)
+  
+  df.return=x.train.new%>%
+    select(LONGITUDE,LATITUDE,FIRE_SIZE,FIRE_NAME,STAT_CAUSE_DESCR,CAUSE_RECODE)%>%
+    mutate(CAUSE=preds)
+  
+  return(df.return)
+  
 }
 
 getNew=function(state.name,year,month,day_of_week,latitude,longitude,firesize){
@@ -293,78 +293,78 @@ getNew=function(state.name,year,month,day_of_week,latitude,longitude,firesize){
     x.train=train.prev
   }else{
     fires.state=fires[fires$STATE==state.name,]
-
+    
     if(nrow(fires.state)<1000){
-     fires.sample=fires.state
+      fires.sample=fires.state
     }else{
-     p=1000/nrow(fires.state)
-     sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
-     fires.sample=fires.state[sampling.index,]
+      p=1000/nrow(fires.state)
+      sampling.index=sample(c(TRUE,FALSE),nrow(fires.state), replace=TRUE, prob = c(p,1-p))
+      fires.sample=fires.state[sampling.index,]
     }
-
-#select the variables we would like to use and tansform them into appropriate format
-  fires.sample=fires.sample%>%
-    select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
-    mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
-    mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
-    mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
-    mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
-    mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
-                          ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
-                                ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
-                                       "Accidental"))))%>%
-    select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
+    
+    #select the variables we would like to use and tansform them into appropriate format
+    fires.sample=fires.sample%>%
+      select(c(STAT_CAUSE_DESCR,LATITUDE,LONGITUDE,DISCOVERY_DATE,FIRE_SIZE))%>%
+      mutate(DATE=as.Date(DISCOVERY_DATE-2458014.5,origin= '2017-09-18'))%>%
+      mutate(YEAR=as.numeric(format(as.Date(DATE),"%Y")))%>%
+      mutate(MONTH=as.numeric(format(as.Date(DATE),"%m")))%>%
+      mutate(DAY_OF_WEEK=as.numeric(wday(as.Date(DATE,'%Y-%m-%d'))))%>%
+      mutate(CAUSE_RECODE = ifelse(STAT_CAUSE_DESCR %in% c("Lightning"), "Natural",
+                                   ifelse(STAT_CAUSE_DESCR %in% c("Arson"), "Malicious",
+                                          ifelse(STAT_CAUSE_DESCR %in% c("Missing/Undefined","Miscellaneous"), "Other Causes",
+                                                 "Accidental"))))%>%
+      select(-c(DISCOVERY_DATE,DATE,STAT_CAUSE_DESCR,YEAR))
+    
+    #change classes of some variables to factor
+    factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
+    fires.sample[factornames] = lapply(fires.sample[factornames], factor)
+    
+    #create training data frame
+    predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
+    
+    x.train=fires.sample[,predictors]
+    y.train=fires.sample$CAUSE_RECODE
+    
+    
+    #random forest
+    tr.control=trainControl(method="cv",number=3)
+    
+    rfmodel <- train(x = x.train,
+                     y = y.train,
+                     method = 'rf',
+                     tuneLength = 3,
+                     ntree = 2,
+                     trControl = tr.control)
+    
+    model.prev<<-rfmodel
+    state.prev<<-state.name
+    dataset.prev<<-fires.state
+    train.prev<<-x.train
+  }
   
-#change classes of some variables to factor
-factornames=colnames(fires.sample)[!colnames(fires.sample) %in% c("LONGITUDE","LATITUDE","FIRE_SIZE")]
-fires.sample[factornames] = lapply(fires.sample[factornames], factor)
-
-#create training data frame
-predictors=colnames(fires.sample)[!colnames(fires.sample) %in% c("CAUSE_RECODE")]
-
-x.train=fires.sample[,predictors]
-y.train=fires.sample$CAUSE_RECODE
-
-
-#random forest
-tr.control=trainControl(method="cv",number=3)
-
-rfmodel <- train(x = x.train,
-                 y = y.train,
-                 method = 'rf',
-                 tuneLength = 3,
-                 ntree = 2,
-                 trControl = tr.control)
-
-model.prev<<-rfmodel
-state.prev<<-state.name
-dataset.prev<<-fires.state
-train.prev<<-x.train
-}
-
-x.train.new=data.frame(MONTH=as.factor(month),LATITUDE=as.numeric(latitude),LONGITUDE=as.numeric(longitude),FIRE_SIZE=as.numeric(firesize),DAY_OF_WEEK=as.factor(day_of_week))
-
-levels(x.train.new$MONTH)=levels(x.train$MONTH)
-levels(x.train.new$DAY_OF_WEEK)=levels(x.train$DAY_OF_WEEK)
-
-pred=predict(rfmodel,x.train.new)
-
-return(pred)
+  x.train.new=data.frame(MONTH=as.factor(month),LATITUDE=as.numeric(latitude),LONGITUDE=as.numeric(longitude),FIRE_SIZE=as.numeric(firesize),DAY_OF_WEEK=as.factor(day_of_week))
+  
+  levels(x.train.new$MONTH)=levels(x.train$MONTH)
+  levels(x.train.new$DAY_OF_WEEK)=levels(x.train$DAY_OF_WEEK)
+  
+  pred=predict(rfmodel,x.train.new)
+  
+  return(pred)
 }
 
 #function to get state name by lat and long
 #Code taken from SO
 #http://stackoverflow.com/questions/8751497/latitude-longitude-coordinates-to-state-code-in-r/8751965#8751965
 getState <- function(pointsDF) {
-    states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
-    IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
-    states_sp <- map2SpatialPolygons(states, IDs=IDs,
-                     proj4string=CRS("+proj=longlat +datum=WGS84 "))
-    pointsSP <- SpatialPoints(pointsDF, 
-                    proj4string=CRS("+proj=longlat +datum=WGS84 "))
-    indices <- over(pointsSP, states_sp)
-    stateNames <- sapply(states_sp@polygons, function(x) x@ID)
-    stateNames[indices]
+  states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
+  IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
+  states_sp <- map2SpatialPolygons(states, IDs=IDs,
+                                   proj4string=CRS("+proj=longlat +datum=WGS84 "))
+  pointsSP <- SpatialPoints(pointsDF, 
+                            proj4string=CRS("+proj=longlat +datum=WGS84 "))
+  indices <- over(pointsSP, states_sp)
+  stateNames <- sapply(states_sp@polygons, function(x) x@ID)
+  stateNames[indices]
 }
 
 ```
