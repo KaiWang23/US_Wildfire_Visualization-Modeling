@@ -716,10 +716,12 @@ observeEvent(input$go.new,
 
 Reference:
 
-1.Interactive map: https://shiny.rstudio.com/gallery/superzip-example.html
+1.Dataset: Short, Karen C. 2017. Spatial wildfire occurrence data for the United States, 1992-2015 [FPA_FOD_20170508]. 4th Edition. Fort Collins, CO: Forest Service Research Data Archive. https://doi.org/10.2737/RDS-2013-0009.4
 
-2.Leaflet: https://shiny.rstudio.com/gallery/superzip-example.html 
+2.Interactive map: https://shiny.rstudio.com/gallery/superzip-example.html
 
-3.Some ggplots: https://www.kaggle.com/captcalculator/wildfire-exploratory-analysis
+3.Leaflet: https://shiny.rstudio.com/gallery/superzip-example.html 
 
-4.Save gif: https://robjhyndman.com/hyndsight/animations/
+4.Some ggplots: https://www.kaggle.com/captcalculator/wildfire-exploratory-analysis
+
+5.Save gif: https://robjhyndman.com/hyndsight/animations/
